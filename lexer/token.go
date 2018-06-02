@@ -2,6 +2,12 @@ package lexer
 
 type TokenType string
 
+type Token struct {
+	kind         TokenType
+	value        string
+	line, column int
+}
+
 const (
 	/// Identifiers and literals
 	Identifier TokenType = "identifier"
@@ -21,18 +27,24 @@ const (
 
 	/// Comparison operators
 	GreaterThan        TokenType = "greater than"             // >
-	GreaterThanOrEqual TokenType = "greater than or equal to" // >TokenType =
+	GreaterThanOrEqual TokenType = "greater than or equal to" // >=
 	LessThan           TokenType = "less than"                // <
-	LessThanOrEqual    TokenType = "less than or equal to"    // <TokenType =
-	Equal              TokenType = "equals"                   // TokenType =TokenType =
+	LessThanOrEqual    TokenType = "less than or equal to"    // <=
+	Equal              TokenType = "equals"                   // ==
 
 	/// Assignment operator
-	Assign TokenType = "assign" // TokenType =
+	Assign TokenType = "assign" // =
 
 	/// Parenthesis
 	LeftParenthesis  TokenType = "left parenthesis"  // (
 	RightParenthesis TokenType = "right parenthesis" // )
 
-	/// Special tokens
+	/// Special TokenTypes
 	EndOfInput TokenType = "end of input"
+	Unknown    TokenType = "unknown"
+)
+
+var (
+	UnknownToken    = Token{Unknown, string(Unknown), -1, -1}
+	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
