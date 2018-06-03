@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"unicode"
 
-	"./fsm"
+	"github.com/amupitan/hero/lexer/fsm"
 )
 
 // Lexer performs lexical analysis on an input
@@ -30,16 +30,28 @@ func (l *Lexer) NextToken() Token {
 		return l.consumeParenthesis()
 	}
 
+	if isDigit(curr) {
+		return l.consumeFloat()
+	}
+
+	if isOperator(curr) {
+		return l.consumeOperator()
+	}
+
+	if isLetter(curr) {
+		return l.consumeIdentifier()
+	}
+
 	return UnknownToken
 }
 
 func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
 func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
-func isValidIdentifierChar(b byte) bool { return false }
-func isOperator(b byte) bool            { return false }
+func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isLetter(b) }
 func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
 func isArithmeticOperator(b byte) bool  { return b == '+' || b == '-' || b == '*' || b == '/' }
 func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
+func isOperator(b byte) bool            { return isArithmeticOperator(b) || isComparisonOperator(b) }
 
 // getCurr returns the byte at the current position
 func (l *Lexer) getCurr() byte {
@@ -135,7 +147,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	}
 
 	switch char {
-	case '>':
+	case '<':
 		if hasEquals {
 			t.kind = LessThanOrEqual
 			t.value = "<="
@@ -143,7 +155,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 			t.kind = LessThan
 			t.value = "<"
 		}
-	case '<':
+	case '>':
 		if hasEquals {
 			t.kind = GreaterThanOrEqual
 			t.value = ">="
@@ -190,28 +202,23 @@ func (l *Lexer) consumeIdentifier() Token {
 }
 
 func (l *Lexer) consumeFloat() Token {
-	t := Token{
-		kind:   Float,
-		column: l.column,
-		line:   l.line,
-	}
 
-	// fsm := fsm.New(states, states[0], nextState)
-	var identifier bytes.Buffer
-
-	for l.position < len(l.input) {
-		c := l.getCurr()
-		if !isValidIdentifierChar(c) {
-			break
+	fsm := fsm.New(states, states[0], nextState)
+	num, found := fsm.Run(l.input[l.position:])
+	if found {
+		t := Token{
+			kind:   Float,
+			column: l.column,
+			line:   l.line,
+			value:  string(num),
 		}
+		l.position += len(num)
+		l.column += len(num)
 
-		identifier.WriteByte(c)
-		l.move()
+		return t
 	}
 
-	t.value = identifier.String()
-
-	return t
+	return UnknownToken
 }
 
 var (

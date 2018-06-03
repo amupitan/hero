@@ -1,5 +1,9 @@
 package lexer
 
+import (
+	"fmt"
+)
+
 type TokenType string
 
 type Token struct {
@@ -48,3 +52,7 @@ var (
 	UnknownToken    = Token{Unknown, string(Unknown), -1, -1}
 	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
+
+func (t Token) String() string {
+	return fmt.Sprintf("Token(Value: %s, Type: %s)", t.value, t.kind)
+}
