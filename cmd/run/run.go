@@ -7,7 +7,12 @@ import (
 )
 
 func main() {
-	const input = "1 + 1"
+	const input = "a == 3"
 	lex := lexer.New(input)
+	fmt.Println(lex.NextToken())
+	fmt.Println(lex.NextToken())
+	fmt.Println(lex.NextToken())
+	fmt.Println(lex.NextToken())
+	fmt.Println(lex.NextToken())
 	fmt.Println(lex.NextToken())
 }

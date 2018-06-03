@@ -219,12 +219,14 @@ func (l *Lexer) peek() (byte, bool) {
 }
 
 func (l *Lexer) skipWhiteSpace() {
-	for c, ok := l.peek(); ok && isWhitespace(c); l.position++ {
+	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
+		l.position++
 		l.column++
 		if c == '\n' {
 			l.line++
 			l.column = 0
 		}
+
 	}
 }
 
