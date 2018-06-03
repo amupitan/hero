@@ -2,6 +2,9 @@ package lexer
 
 import (
 	"bytes"
+	"unicode"
+
+	"./fsm"
 )
 
 // Lexer performs lexical analysis on an input
@@ -30,13 +33,13 @@ func (l *Lexer) NextToken() Token {
 	return UnknownToken
 }
 
-func isLetter(b byte) bool              { return false }
-func isDigit(b byte) bool               { return false }
+func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
+func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
 func isValidIdentifierChar(b byte) bool { return false }
 func isOperator(b byte) bool            { return false }
-func isParenthesis(b byte) bool         { return false }
-func isArithmeticOperator(b byte) bool  { return false }
-func isComparisonOperator(b byte) bool  { return false }
+func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
+func isArithmeticOperator(b byte) bool  { return b == '+' || b == '-' || b == '*' || b == '/' }
+func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
 
 // getCurr returns the byte at the current position
 func (l *Lexer) getCurr() byte {
@@ -133,25 +136,32 @@ func (l *Lexer) consumeComparisonOperator() Token {
 
 	switch char {
 	case '>':
-		t.kind = LessThan
 		if hasEquals {
 			t.kind = LessThanOrEqual
+			t.value = "<="
+		} else {
+			t.kind = LessThan
+			t.value = "<"
 		}
 	case '<':
-		t.kind = GreaterThan
 		if hasEquals {
 			t.kind = GreaterThanOrEqual
+			t.value = ">="
+		} else {
+			t.kind = GreaterThan
+			t.value = ">"
 		}
 	case '=':
-		t.kind = Assign
 		if hasEquals {
 			t.kind = Equal
+			t.value = "=="
+		} else {
+			t.kind = Assign
+			t.value = "="
 		}
 	default:
 		return UnknownToken
 	}
-
-	t.value = string(char)
 
 	return t
 }
@@ -177,6 +187,99 @@ func (l *Lexer) consumeIdentifier() Token {
 	t.value = identifier.String()
 
 	return t
+}
+
+func (l *Lexer) consumeFloat() Token {
+	t := Token{
+		kind:   Float,
+		column: l.column,
+		line:   l.line,
+	}
+
+	// fsm := fsm.New(states, states[0], nextState)
+	var identifier bytes.Buffer
+
+	for l.position < len(l.input) {
+		c := l.getCurr()
+		if !isValidIdentifierChar(c) {
+			break
+		}
+
+		identifier.WriteByte(c)
+		l.move()
+	}
+
+	t.value = identifier.String()
+
+	return t
+}
+
+var (
+	InitialState        = fsm.State{1, false}
+	IntegerState        = fsm.State{2, true}
+	BeginsFloatState    = fsm.State{3, false}
+	FloatState          = fsm.State{4, true}
+	BeginExpState       = fsm.State{5, false}
+	BeginSignedExpState = fsm.State{6, false}
+	ExponentState       = fsm.State{8, true}
+	NullState           = fsm.NullState
+)
+
+var states = []fsm.State{
+	InitialState,
+	IntegerState,
+	BeginsFloatState,
+	FloatState,
+	BeginExpState,
+	BeginSignedExpState,
+	ExponentState,
+	NullState,
+}
+
+func nextState(currentState fsm.State, input byte) fsm.State {
+	switch currentState.Value {
+	case InitialState.Value:
+		if isDigit(input) {
+			return IntegerState
+		}
+	case IntegerState.Value:
+		if isDigit(input) {
+			return IntegerState
+		}
+		if input == '.' {
+			return BeginsFloatState
+		}
+		if unicode.ToLower(rune(input)) == 'e' {
+			return BeginExpState
+		}
+	case BeginsFloatState.Value:
+		if isDigit(input) {
+			return FloatState
+		}
+	case FloatState.Value:
+		if isDigit(input) {
+			return FloatState
+		}
+		if unicode.ToLower(rune(input)) == 'e' {
+			return BeginExpState
+		}
+	case BeginExpState.Value:
+		if isDigit(input) {
+			return ExponentState
+		}
+		if input == '+' || input == '-' {
+			return BeginSignedExpState
+		}
+	case BeginSignedExpState.Value:
+		if isDigit(input) {
+			return ExponentState
+		}
+	case ExponentState.Value:
+		if isDigit(input) {
+			return ExponentState
+		}
+	}
+	return NullState
 }
 
 /*
