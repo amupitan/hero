@@ -2,7 +2,7 @@ package lexer
 
 import (
 	"bytes"
-	"unicode"
+	"fmt"
 
 	"github.com/amupitan/hero/lexer/fsm"
 )
@@ -19,39 +19,33 @@ func New(input string) *Lexer {
 	}
 }
 
-func (l *Lexer) NextToken() Token {
+/// NextToken returns the next recognized token or an error if none is found
+func (l *Lexer) NextToken() (Token, error) {
+	l.skipWhiteSpace()
 	if l.position >= len(l.input) {
-		return EndOfInputToken
+		return EndOfInputToken, nil
 	}
 
 	curr := l.getCurr()
 
 	if isParenthesis(curr) {
-		return l.consumeParenthesis()
+		return l.consumeParenthesis(), nil
 	}
 
 	if isDigit(curr) {
-		return l.consumeFloat()
+		return l.consumeFloat(), nil
 	}
 
 	if isOperator(curr) {
-		return l.consumeOperator()
+		return l.consumeOperator(), nil
 	}
 
 	if isLetter(curr) {
-		return l.consumeIdentifier()
+		return l.consumeIdentifier(), nil
 	}
 
-	return UnknownToken
+	return UnknownToken, fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line+1, l.column+1)
 }
-
-func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
-func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
-func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isLetter(b) }
-func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
-func isArithmeticOperator(b byte) bool  { return b == '+' || b == '-' || b == '*' || b == '/' }
-func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
-func isOperator(b byte) bool            { return isArithmeticOperator(b) || isComparisonOperator(b) }
 
 // getCurr returns the byte at the current position
 func (l *Lexer) getCurr() byte {
@@ -84,23 +78,19 @@ func (l *Lexer) consumeParenthesis() Token {
 
 // consumeOperator consumes an operator token
 func (l *Lexer) consumeOperator() Token {
+	defer l.move()
 	char := l.getCurr()
 
 	if isArithmeticOperator(char) {
 		return l.consumeArithmeticOperator()
 	}
 
-	if isComparisonOperator(char) {
-		return l.consumeComparisonOperator()
-	}
-
-	l.move()
-	return UnknownToken
+	// if it isn't arithmetic then it is comparison
+	return l.consumeComparisonOperator()
 }
 
 // consumeOperator consumes an operator token
 func (l *Lexer) consumeArithmeticOperator() Token {
-	defer l.move()
 	t := Token{
 		column: l.column,
 		line:   l.line,
@@ -117,8 +107,6 @@ func (l *Lexer) consumeArithmeticOperator() Token {
 		t.kind = Div
 	case '*':
 		t.kind = Times
-	default:
-		return UnknownToken
 	}
 
 	t.value = string(op)
@@ -128,7 +116,6 @@ func (l *Lexer) consumeArithmeticOperator() Token {
 
 // consumeComparisonOperator consumes an operator token
 func (l *Lexer) consumeComparisonOperator() Token {
-	defer l.move()
 	t := Token{
 		column: l.column,
 		line:   l.line,
@@ -140,6 +127,8 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	if l.position+1 < len(l.input) {
 		// copy next byte
 		cpy := l.input[l.position+1]
+
+		// move cursor to accommodate '='
 		if cpy == '=' {
 			hasEquals = true
 			l.move()
@@ -171,8 +160,6 @@ func (l *Lexer) consumeComparisonOperator() Token {
 			t.kind = Assign
 			t.value = "="
 		}
-	default:
-		return UnknownToken
 	}
 
 	return t
@@ -180,6 +167,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 
 // consumeIdentifier consumes an identifier and returns a token
 func (l *Lexer) consumeIdentifier() Token {
+	defer l.move()
 	t := Token{
 		kind:   Identifier,
 		column: l.column,
@@ -201,96 +189,47 @@ func (l *Lexer) consumeIdentifier() Token {
 	return t
 }
 
+// consumeFloat consumes a number and returns a token
 func (l *Lexer) consumeFloat() Token {
-
 	fsm := fsm.New(states, states[0], nextState)
-	num, found := fsm.Run(l.input[l.position:])
-	if found {
-		t := Token{
-			kind:   Float,
-			column: l.column,
-			line:   l.line,
-			value:  string(num),
-		}
-		l.position += len(num)
-		l.column += len(num)
 
-		return t
+	// ignores whether token is found because we can
+	// guarantee that atleast the first one will be found
+	// otherwise this never would have been called
+	num, _ := fsm.Run(l.input[l.position:])
+	t := Token{
+		kind:   Float,
+		column: l.column,
+		line:   l.line,
+		value:  string(num),
 	}
+	l.position += len(num)
+	l.column += len(num)
 
-	return UnknownToken
+	return t
 }
 
-var (
-	InitialState        = fsm.State{1, false}
-	IntegerState        = fsm.State{2, true}
-	BeginsFloatState    = fsm.State{3, false}
-	FloatState          = fsm.State{4, true}
-	BeginExpState       = fsm.State{5, false}
-	BeginSignedExpState = fsm.State{6, false}
-	ExponentState       = fsm.State{8, true}
-	NullState           = fsm.NullState
-)
-
-var states = []fsm.State{
-	InitialState,
-	IntegerState,
-	BeginsFloatState,
-	FloatState,
-	BeginExpState,
-	BeginSignedExpState,
-	ExponentState,
-	NullState,
+// peek returns the byte at cursor and true if found,
+// else it returns 0 and false
+func (l *Lexer) peek() (byte, bool) {
+	if l.position < len(l.input) {
+		return l.input[l.position], true
+	}
+	return 0, false
 }
 
-func nextState(currentState fsm.State, input byte) fsm.State {
-	switch currentState.Value {
-	case InitialState.Value:
-		if isDigit(input) {
-			return IntegerState
-		}
-	case IntegerState.Value:
-		if isDigit(input) {
-			return IntegerState
-		}
-		if input == '.' {
-			return BeginsFloatState
-		}
-		if unicode.ToLower(rune(input)) == 'e' {
-			return BeginExpState
-		}
-	case BeginsFloatState.Value:
-		if isDigit(input) {
-			return FloatState
-		}
-	case FloatState.Value:
-		if isDigit(input) {
-			return FloatState
-		}
-		if unicode.ToLower(rune(input)) == 'e' {
-			return BeginExpState
-		}
-	case BeginExpState.Value:
-		if isDigit(input) {
-			return ExponentState
-		}
-		if input == '+' || input == '-' {
-			return BeginSignedExpState
-		}
-	case BeginSignedExpState.Value:
-		if isDigit(input) {
-			return ExponentState
-		}
-	case ExponentState.Value:
-		if isDigit(input) {
-			return ExponentState
+func (l *Lexer) skipWhiteSpace() {
+	for c, ok := l.peek(); ok && isWhitespace(c); l.position++ {
+		l.column++
+		if c == '\n' {
+			l.line++
+			l.column = 0
 		}
 	}
-	return NullState
 }
 
 /*
-// TODO: assignent operator
+// TODO: assignment operator
 // Other arithmetic operators
 // Conditions
 */
