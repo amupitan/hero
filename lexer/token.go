@@ -24,24 +24,25 @@ const (
 	While TokenType = "while"
 
 	/// Arithmetic operators
-	Plus  TokenType = "plus"  // +
-	Minus TokenType = "minus" // -
-	Times TokenType = "times" // *
-	Div   TokenType = "div"   // /
+	Plus  TokenType = "+"
+	Minus TokenType = "-"
+	Times TokenType = "*"
+	Div   TokenType = "/"
+	Mod   TokenType = "%"
 
 	/// Comparison operators
-	GreaterThan        TokenType = "greater than"             // >
-	GreaterThanOrEqual TokenType = "greater than or equal to" // >=
-	LessThan           TokenType = "less than"                // <
-	LessThanOrEqual    TokenType = "less than or equal to"    // <=
-	Equal              TokenType = "equals"                   // ==
+	GreaterThan        TokenType = ">"
+	GreaterThanOrEqual TokenType = ">="
+	LessThan           TokenType = "<"
+	LessThanOrEqual    TokenType = "<="
+	Equal              TokenType = "=="
 
 	/// Assignment operator
-	Assign TokenType = "assign" // =
+	Assign TokenType = "="
 
 	/// Parenthesis
-	LeftParenthesis  TokenType = "left parenthesis"  // (
-	RightParenthesis TokenType = "right parenthesis" // )
+	LeftParenthesis  TokenType = "("
+	RightParenthesis TokenType = ")"
 
 	/// Special TokenTypes
 	EndOfInput TokenType = "end of input"
@@ -54,5 +55,5 @@ var (
 )
 
 func (t Token) String() string {
-	return fmt.Sprintf("Token(Value: %s, Type: %s)", t.value, t.kind)
+	return fmt.Sprintf("Token(Value: %s, Type: %s, Poistion: %d:%d)", t.value, t.kind, t.line, t.column)
 }

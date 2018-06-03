@@ -19,6 +19,7 @@ func TestFSM_Run(t *testing.T) {
 		isAccepts := value%2 == 0 //isAccepts if even
 		return State{value, isAccepts}
 	}
+	_ = mockNextState //TODO
 	tests := []struct {
 		name   string
 		fields fields

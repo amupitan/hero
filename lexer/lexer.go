@@ -15,7 +15,9 @@ type Lexer struct {
 
 func New(input string) *Lexer {
 	return &Lexer{
-		input: []byte(input),
+		input:  []byte(input),
+		line:   1,
+		column: 1,
 	}
 }
 
@@ -44,7 +46,7 @@ func (l *Lexer) NextToken() (Token, error) {
 		return l.consumeIdentifier(), nil
 	}
 
-	return UnknownToken, fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line+1, l.column+1)
+	return UnknownToken, fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line, l.column)
 }
 
 // getCurr returns the byte at the current position
@@ -224,9 +226,8 @@ func (l *Lexer) skipWhiteSpace() {
 		l.column++
 		if c == '\n' {
 			l.line++
-			l.column = 0
+			l.column = 1
 		}
-
 	}
 }
 
