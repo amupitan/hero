@@ -14,12 +14,13 @@ func TestFSM_Run(t *testing.T) {
 	type args struct {
 		input []byte
 	}
+	empty := struct{}{}
+	state1, state2 := State{1, true}, State{2, true}
 	mockNextState := func(current State, input byte) State {
 		value := int(input - '0')
 		isAccepts := value%2 == 0 //isAccepts if even
 		return State{value, isAccepts}
 	}
-	_ = mockNextState //TODO
 	tests := []struct {
 		name   string
 		fields fields
@@ -27,7 +28,17 @@ func TestFSM_Run(t *testing.T) {
 		want   []byte
 		want1  bool
 	}{
-		// TODO: Add test cases.
+		{
+			"one state",
+			fields{
+				states:       map[State]struct{}{state1: empty, state2: empty},
+				initial:      state1,
+				getNextState: mockNextState,
+			},
+			args{[]byte("1 + 2")},
+			[]byte("1 + 2"),
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

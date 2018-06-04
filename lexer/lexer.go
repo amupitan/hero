@@ -34,19 +34,15 @@ func (l *Lexer) NextToken() (Token, error) {
 		return l.consumeParenthesis(), nil
 	}
 
-	if isDigit(curr) {
-		return l.consumeFloat(), nil
+	if beginsLiteral(curr) {
+		return l.consumeLiteral(), nil
 	}
 
 	if isOperator(curr) {
 		return l.consumeOperator(), nil
 	}
 
-	if isLetter(curr) {
-		return l.consumeIdentifier(), nil
-	}
-
-	return UnknownToken, fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line, l.column)
+	return UnknownToken(l.line, l.column), fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line, l.column)
 }
 
 // getCurr returns the byte at the current position
@@ -167,6 +163,75 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	return t
 }
 
+func (l *Lexer) consumeLiteral() Token {
+	defer l.move()
+
+	b := l.getCurr()
+
+	if isLetter(b) {
+		return l.consumeIdentifierOrKeyword()
+	}
+
+	if beginsIdentifier(b) {
+		return l.consumeIdentifier()
+	}
+
+	if beginsNumber(b) {
+		return l.consumeNumber()
+	}
+
+	if beginsString(b) {
+		return l.consumeString()
+	}
+
+	if beginsRune(b) {
+		return l.consumeRune()
+	}
+
+	return UnknownToken(l.line, l.column)
+
+}
+
+func (l *Lexer) consumeIdentifierOrKeyword() Token {
+	if t := l.consumeKeyword(); t.kind != Unknown {
+		return t
+	}
+
+	return l.consumeIdentifier()
+}
+
+func (l *Lexer) consumeKeyword() Token { return Token{} }
+
+// consumeRune consumes a rune token
+func (l *Lexer) consumeRune() Token {
+	if l.getCurr() != '\'' {
+		t := l.getUnknownToken()
+		l.move()
+		return t
+	}
+
+	l.move()
+	c := l.getCurr()
+	l.move()
+
+	if l.getCurr() != '\'' {
+		t := l.getUnknownToken()
+		l.move()
+		return t
+	}
+
+	t := Token{
+		column: l.column,
+		line:   l.line,
+		kind:   Rune,
+		value:  string(c),
+	}
+	l.move()
+	return t
+}
+
+func (l *Lexer) consumeString() Token { return Token{} }
+
 // consumeIdentifier consumes an identifier and returns a token
 func (l *Lexer) consumeIdentifier() Token {
 	defer l.move()
@@ -191,16 +256,25 @@ func (l *Lexer) consumeIdentifier() Token {
 	return t
 }
 
-// consumeFloat consumes a number and returns a token
-func (l *Lexer) consumeFloat() Token {
+// consumeNumber consumes a number and returns an int or Float token
+func (l *Lexer) consumeNumber() Token {
 	fsm := fsm.New(states, states[0], nextState)
 
 	// ignores whether token is found because we can
 	// guarantee that atleast the first one will be found
 	// otherwise this never would have been called
 	num, _ := fsm.Run(l.input[l.position:])
+
+	// check for a decimal to determine whether Int or Float
+	var kind TokenType = Int
+	for _, b := range num {
+		if b == '.' || b == 'e' || b == 'E' {
+			kind = Float
+		}
+	}
+
 	t := Token{
-		kind:   Float,
+		kind:   kind,
 		column: l.column,
 		line:   l.line,
 		value:  string(num),
@@ -209,6 +283,10 @@ func (l *Lexer) consumeFloat() Token {
 	l.column += len(num)
 
 	return t
+}
+
+func (l *Lexer) getUnknownToken() Token {
+	return UnknownToken(l.line, l.column)
 }
 
 // peek returns the byte at cursor and true if found,
@@ -220,6 +298,7 @@ func (l *Lexer) peek() (byte, bool) {
 	return 0, false
 }
 
+// skipWhiteSpace skips all white spaces and new lines till the next non-space byte
 func (l *Lexer) skipWhiteSpace() {
 	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
 		l.position++

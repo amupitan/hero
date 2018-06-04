@@ -76,9 +76,23 @@ func nextState(currentState fsm.State, input byte) fsm.State {
 
 func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
 func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
-func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isLetter(b) }
+func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) }
 func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
-func isArithmeticOperator(b byte) bool  { return b == '+' || b == '-' || b == '*' || b == '/' }
+func isBitOrBoolOperator(b byte) bool   { return b == '&' || b == '|' || b == '!' }
 func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
-func isOperator(b byte) bool            { return isArithmeticOperator(b) || isComparisonOperator(b) }
 func isWhitespace(b byte) bool          { return b == ' ' || b == '\t' || b == '\n' }
+func beginsNumber(b byte) bool          { return b == '.' || isDigit(b) }
+func beginsString(b byte) bool          { return b == '"' || b == '`' }
+func beginsRune(b byte) bool            { return b == '\'' }
+func beginsIdentifier(b byte) bool      { return b == '_' || isLetter(b) }
+
+func beginsLiteral(b byte) bool {
+	return beginsString(b) || beginsIdentifier(b) || beginsRune(b) || beginsNumber(b)
+}
+
+func isOperator(b byte) bool {
+	return isArithmeticOperator(b) || isComparisonOperator(b) || isBitOrBoolOperator(b)
+}
+func isArithmeticOperator(b byte) bool {
+	return b == '+' || b == '-' || b == '*' || b == '/' || b == '%'
+}

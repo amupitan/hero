@@ -18,8 +18,12 @@ const (
 	Int        TokenType = "int"
 	Float      TokenType = "float"
 	String     TokenType = "string"
+	Rune       TokenType = "rune"
 
-	/// Conditions
+	/// Keywords
+	Var   TokenType = "var"
+	Const TokenType = "const"
+	Null  TokenType = "null"
 	If    TokenType = "if"
 	While TokenType = "while"
 
@@ -37,8 +41,21 @@ const (
 	LessThanOrEqual    TokenType = "<="
 	Equal              TokenType = "=="
 
+	/// Boolean operators
+	And TokenType = "&&"
+	Or  TokenType = "||"
+	Not TokenType = "!"
+
+	/// Bitwise operators
+	BitAnd TokenType = "&"
+	BitOr  TokenType = "|"
+	BitXor TokenType = "^"
+
 	/// Assignment operator
 	Assign TokenType = "="
+
+	/// Dot
+	Dot TokenType = "."
 
 	/// Parenthesis
 	LeftParenthesis  TokenType = "("
@@ -50,7 +67,7 @@ const (
 )
 
 var (
-	UnknownToken    = Token{Unknown, string(Unknown), -1, -1}
+	UnknownToken    = func(line, column int) Token { return Token{Unknown, string(Unknown), line, column} }
 	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
 
