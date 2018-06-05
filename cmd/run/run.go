@@ -7,12 +7,16 @@ import (
 )
 
 func main() {
-	const input = "a == 3"
+	const input = `var a = 's'`
 	lex := lexer.New(input)
-	fmt.Println(lex.NextToken())
-	fmt.Println(lex.NextToken())
-	fmt.Println(lex.NextToken())
-	fmt.Println(lex.NextToken())
-	fmt.Println(lex.NextToken())
-	fmt.Println(lex.NextToken())
+
+	tokens, err := lex.Tokenize()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, token := range tokens {
+		fmt.Println(token)
+
+	}
 }

@@ -22,31 +22,47 @@ func New(input string) *Lexer {
 }
 
 /// NextToken returns the next recognized token or an error if none is found
-func (l *Lexer) NextToken() (Token, error) {
+func (l *Lexer) NextToken() Token {
 	l.skipWhiteSpace()
 	if l.position >= len(l.input) {
-		return EndOfInputToken, nil
+		return EndOfInputToken
 	}
 
 	curr := l.getCurr()
 
 	if isParenthesis(curr) {
-		return l.consumeParenthesis(), nil
+		return l.consumeParenthesis()
 	}
 
 	if beginsLiteral(curr) {
-		return l.recognizeLiteral(), nil
+		return l.recognizeLiteral()
 	}
 
 	if isOperator(curr) {
-		return l.consumeOperator(), nil
+		return l.consumeOperator()
 	}
 
 	if isDot(curr) {
-		return l.consumeDot(), nil
+		return l.consumeDot()
 	}
 
-	return UnknownToken(l.line, l.column), fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line, l.column)
+	return UnknownToken(string(curr), l.line, l.column)
+}
+
+// Tokenize returns all the tokens or an error
+func (l *Lexer) Tokenize() ([]Token, error) {
+	var token Token
+	tokens := []Token{}
+	for token = l.NextToken(); token.kind != EndOfInput && token.kind != Unknown; {
+		tokens = append(tokens, token)
+		token = l.NextToken()
+	}
+
+	if token.kind == Unknown {
+		return nil, fmt.Errorf("Unrecognized character '%s' on line %d, column %d.", token.value, token.line, token.column)
+	}
+
+	return tokens, nil
 }
 
 // getCurr returns the byte at the current position
@@ -191,7 +207,7 @@ func (l *Lexer) recognizeLiteral() Token {
 		return l.consumeRune()
 	}
 
-	return UnknownToken(l.line, l.column)
+	return UnknownToken(string(b), l.line, l.column)
 
 }
 
@@ -224,7 +240,7 @@ func (l *Lexer) consumableKeyword(word string) Token {
 		}
 	}
 
-	return UnknownToken(line, col)
+	return UnknownToken(word, line, col)
 }
 
 // consumeDot consumes a keyword token
@@ -259,8 +275,8 @@ func (l *Lexer) getNextWord(isAllowed func(b byte) bool) string {
 
 // consumeRune consumes a rune token
 func (l *Lexer) consumeRune() Token {
-	if l.getCurr() != '\'' {
-		t := l.getUnknownToken()
+	if b := l.getCurr(); b != '\'' {
+		t := l.getUnknownToken(string(b))
 		l.move()
 		return t
 	}
@@ -269,8 +285,8 @@ func (l *Lexer) consumeRune() Token {
 	c := l.getCurr()
 	l.move()
 
-	if l.getCurr() != '\'' {
-		t := l.getUnknownToken()
+	if b := l.getCurr(); b != '\'' {
+		t := l.getUnknownToken(string(b))
 		l.move()
 		return t
 	}
@@ -334,8 +350,8 @@ func (l *Lexer) consumeNumber() Token {
 	return t
 }
 
-func (l *Lexer) getUnknownToken() Token {
-	return UnknownToken(l.line, l.column)
+func (l *Lexer) getUnknownToken(value string) Token {
+	return UnknownToken(value, l.line, l.column)
 }
 
 // peek returns the byte at cursor and true if found,

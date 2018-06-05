@@ -75,7 +75,7 @@ var keywords = map[TokenType]struct{}{
 }
 
 var (
-	UnknownToken    = func(line, column int) Token { return Token{Unknown, string(Unknown), line, column} }
+	UnknownToken    = func(value string, line, column int) Token { return Token{Unknown, value, line, column} }
 	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
 
