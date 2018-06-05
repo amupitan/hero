@@ -281,8 +281,18 @@ func (l *Lexer) consumeRune() Token {
 		return t
 	}
 
+	var value bytes.Buffer
+
 	l.move()
 	c := l.getCurr()
+
+	// consume escape character if one exists
+	if c == '\\' {
+		value.WriteByte('\\')
+		l.move()
+		c = l.getCurr()
+		// TODO: check valid escapes
+	}
 	l.move()
 
 	if b := l.getCurr(); b != '\'' {
@@ -291,11 +301,13 @@ func (l *Lexer) consumeRune() Token {
 		return t
 	}
 
+	value.WriteByte(c)
+
 	t := Token{
 		column: l.column,
 		line:   l.line,
 		kind:   Rune,
-		value:  string(c),
+		value:  value.String(),
 	}
 	l.move()
 	return t
