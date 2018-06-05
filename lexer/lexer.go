@@ -35,11 +35,15 @@ func (l *Lexer) NextToken() (Token, error) {
 	}
 
 	if beginsLiteral(curr) {
-		return l.consumeLiteral(), nil
+		return l.recognizeLiteral(), nil
 	}
 
 	if isOperator(curr) {
 		return l.consumeOperator(), nil
+	}
+
+	if isDot(curr) {
+		return l.consumeDot(), nil
 	}
 
 	return UnknownToken(l.line, l.column), fmt.Errorf("Unrecognized character '%c' on line %d, column %d.", curr, l.line, l.column)
@@ -163,9 +167,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	return t
 }
 
-func (l *Lexer) consumeLiteral() Token {
-	defer l.move()
-
+func (l *Lexer) recognizeLiteral() Token {
 	b := l.getCurr()
 
 	if isLetter(b) {
@@ -173,7 +175,8 @@ func (l *Lexer) consumeLiteral() Token {
 	}
 
 	if beginsIdentifier(b) {
-		return l.consumeIdentifier()
+		// TODO: use comsumeIdentifier function to optmize out unused keyword functionality
+		return l.consumeIdentifierOrKeyword()
 	}
 
 	if beginsNumber(b) {
@@ -192,15 +195,67 @@ func (l *Lexer) consumeLiteral() Token {
 
 }
 
+// consumeIdentifierOrKeyword recognizes an identifier or a keyword
 func (l *Lexer) consumeIdentifierOrKeyword() Token {
-	if t := l.consumeKeyword(); t.kind != Unknown {
+	word := l.getNextWord(isLetter)
+	defer func() {
+		l.position += len(word)
+		l.column += len(word)
+	}()
+
+	if t := l.consumableKeyword(word); t.kind != Unknown {
 		return t
 	}
 
-	return l.consumeIdentifier()
+	return l.consumableIdentifier(word)
 }
 
-func (l *Lexer) consumeKeyword() Token { return Token{} }
+// consumableKeyword returns a keyword/unknown token which can be consumed
+func (l *Lexer) consumableKeyword(word string) Token {
+	col, line := l.column, l.line
+
+	keyword := TokenType(word)
+	if _, ok := keywords[keyword]; ok {
+		return Token{
+			kind:   keyword,
+			value:  word,
+			column: col,
+			line:   line,
+		}
+	}
+
+	return UnknownToken(line, col)
+}
+
+// consumeDot consumes a keyword token
+func (l *Lexer) consumeDot() Token {
+	return Token{
+		kind:   Dot,
+		value:  string(Dot),
+		line:   l.line,
+		column: l.column,
+	}
+}
+
+// getNextWord reads all the chracters till the next white space
+// and returns the consumed characters
+func (l *Lexer) getNextWord(isAllowed func(b byte) bool) string {
+	var word bytes.Buffer
+	if isAllowed == nil {
+		isAllowed = func(b byte) bool { return true }
+	}
+
+	var i int
+	for i = l.position; i < len(l.input); i++ {
+		b := l.input[i]
+		if isWhitespace(b) || !isAllowed(b) { //TODO: only spaces & tabs should count as whitespace
+			break
+		}
+		word.WriteByte(b)
+	}
+
+	return word.String()
+}
 
 // consumeRune consumes a rune token
 func (l *Lexer) consumeRune() Token {
@@ -232,27 +287,21 @@ func (l *Lexer) consumeRune() Token {
 
 func (l *Lexer) consumeString() Token { return Token{} }
 
-// consumeIdentifier consumes an identifier and returns a token
-func (l *Lexer) consumeIdentifier() Token {
-	defer l.move()
+// consumableIdentifier returns an identifier/unknown token which can be consumed
+func (l *Lexer) consumableIdentifier(word string) Token {
 	t := Token{
 		kind:   Identifier,
 		column: l.column,
 		line:   l.line,
 	}
-	var identifier bytes.Buffer
-	for l.position < len(l.input) {
-		c := l.getCurr()
-		if !isValidIdentifierChar(c) {
+
+	for _, c := range word {
+		if !isValidIdentifierChar(byte(c)) {
 			break
 		}
-
-		identifier.WriteByte(c)
-		l.move()
 	}
 
-	t.value = identifier.String()
-
+	t.value = word
 	return t
 }
 

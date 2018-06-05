@@ -66,11 +66,19 @@ const (
 	Unknown    TokenType = "unknown"
 )
 
+var keywords = map[TokenType]struct{}{
+	Var:   struct{}{},
+	Const: struct{}{},
+	Null:  struct{}{},
+	If:    struct{}{},
+	While: struct{}{},
+}
+
 var (
 	UnknownToken    = func(line, column int) Token { return Token{Unknown, string(Unknown), line, column} }
 	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
 
 func (t Token) String() string {
-	return fmt.Sprintf("Token(Value: %s, Type: %s, Poistion: %d:%d)", t.value, t.kind, t.line, t.column)
+	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.value, t.kind, t.line, t.column)
 }

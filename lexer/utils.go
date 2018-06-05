@@ -76,6 +76,7 @@ func nextState(currentState fsm.State, input byte) fsm.State {
 
 func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
 func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
+func isDot(b byte) bool                 { return b == '.' }
 func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) }
 func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
 func isBitOrBoolOperator(b byte) bool   { return b == '&' || b == '|' || b == '!' }
