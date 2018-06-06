@@ -51,7 +51,7 @@ func Test_nextState(t *testing.T) {
 		{
 			"Initial with decimal point",
 			args{InitialState, '.'},
-			NullState,
+			BeginsFloatState,
 		},
 		{
 			"Initial with exponent,e",

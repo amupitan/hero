@@ -34,6 +34,9 @@ func nextState(currentState fsm.State, input byte) fsm.State {
 		if isDigit(input) {
 			return IntegerState
 		}
+		if input == '.' {
+			return BeginsFloatState
+		}
 	case IntegerState.Value:
 		if isDigit(input) {
 			return IntegerState
@@ -78,7 +81,7 @@ func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
 func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
 func isDot(b byte) bool                 { return b == '.' }
 func isColon(b byte) bool               { return b == ':' }
-func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) }
+func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isDigit(b) }
 func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
 func isBitOrBoolOperator(b byte) bool   { return b == '&' || b == '|' || b == '!' }
 func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }

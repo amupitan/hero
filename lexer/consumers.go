@@ -137,12 +137,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 func (l *Lexer) recognizeLiteral() Token {
 	b := l.getCurr()
 
-	if isLetter(b) {
-		return l.consumeIdentifierOrKeyword()
-	}
-
 	if beginsIdentifier(b) {
-		// TODO: use comsumeIdentifier function to optmize out unused keyword functionality
 		return l.consumeIdentifierOrKeyword()
 	}
 
@@ -174,7 +169,12 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 		return t
 	}
 
-	return l.consumableIdentifier(word)
+	return Token{
+		kind:   Identifier,
+		value:  word,
+		column: l.column,
+		line:   l.line,
+	}
 }
 
 // consumableKeyword returns a keyword/unknown token which can be consumed
@@ -196,12 +196,15 @@ func (l *Lexer) consumableKeyword(word string) Token {
 
 // consumeDot consumes a keyword token
 func (l *Lexer) consumeDot() Token {
-	return Token{
+	t := Token{
 		kind:   Dot,
 		value:  string(Dot),
 		line:   l.line,
 		column: l.column,
 	}
+
+	l.move()
+	return t
 }
 
 // consumeRune consumes a rune token
@@ -268,10 +271,10 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 func (l *Lexer) consumeNumber() Token {
 	fsm := fsm.New(states, states[0], nextState)
 
-	// ignores whether token is found because we can
-	// guarantee that atleast the first one will be found
-	// otherwise this never would have been called
-	num, _ := fsm.Run(l.input[l.position:])
+	num, isNum := fsm.Run(l.input[l.position:])
+	if !isNum && len(num) == 0 {
+		return UnknownToken(string(l.getCurr()), l.line, l.column)
+	}
 
 	// check for a decimal to determine whether Int or Float
 	var kind TokenType = Int

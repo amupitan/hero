@@ -35,7 +35,9 @@ func (l *Lexer) NextToken() Token {
 	}
 
 	if beginsLiteral(curr) {
-		return l.recognizeLiteral()
+		if t := l.recognizeLiteral(); t.kind != Unknown {
+			return t
+		}
 	}
 
 	if isColon(curr) {
@@ -49,7 +51,6 @@ func (l *Lexer) NextToken() Token {
 	if isDot(curr) {
 		return l.consumeDot()
 	}
-
 	return UnknownToken(string(curr), l.line, l.column)
 }
 
@@ -132,7 +133,6 @@ func (l *Lexer) skipWhiteSpace() {
 }
 
 /*
-// TODO: assignment operator
 // Other arithmetic operators
 // Conditions
 */
