@@ -58,6 +58,8 @@ const (
 
 	/// Dot
 	Dot TokenType = "."
+	// TwoDots TokenType = ".."
+	// Ellipses TokenType = "..."
 
 	/// Delimeters
 	Colon            TokenType = ":"
