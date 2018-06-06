@@ -82,7 +82,6 @@ func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
 func isDot(b byte) bool                 { return b == '.' }
 func isColon(b byte) bool               { return b == ':' }
 func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isDigit(b) }
-func isParenthesis(b byte) bool         { return b == '(' || b == ')' }
 func isBitOrBoolOperator(b byte) bool   { return b == '&' || b == '|' || b == '!' }
 func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
 func isWhitespace(b byte) bool          { return b == ' ' || b == '\t' || b == '\n' }
@@ -90,6 +89,10 @@ func beginsNumber(b byte) bool          { return b == '.' || isDigit(b) }
 func beginsString(b byte) bool          { return b == '"' || b == '`' }
 func beginsRune(b byte) bool            { return b == '\'' }
 func beginsIdentifier(b byte) bool      { return b == '_' || isLetter(b) }
+
+func isDelimeter(b byte) bool {
+	return b == ',' || b == '(' || b == ')' || b == '[' || b == ']' || b == '{' || b == '}'
+}
 
 func beginsLiteral(b byte) bool {
 	return beginsString(b) || beginsIdentifier(b) || beginsRune(b) || beginsNumber(b)

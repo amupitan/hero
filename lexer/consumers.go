@@ -6,18 +6,32 @@ import (
 	"github.com/amupitan/hero/lexer/fsm"
 )
 
-// consumeParenthesis consumes a parenthesis token
-func (l *Lexer) consumeParenthesis() Token {
+// consumeDelimeter consumes a delimeter token
+func (l *Lexer) consumeDelimeter() Token {
+	c := l.getCurr()
 	t := Token{
-		kind:   LeftParenthesis,
 		column: l.column,
 		line:   l.line,
-		value:  "(",
+		value:  string(c),
 	}
 
-	if l.getCurr() == ')' {
+	switch c {
+	case ',':
+		t.kind = Comma
+	case '(':
+		t.kind = LeftParenthesis
+	case ')':
 		t.kind = RightParenthesis
-		t.value = ")"
+	case '[':
+		t.kind = LeftBracket
+	case ']':
+		t.kind = RightBracket
+	case '{':
+		t.kind = LeftBrace
+	case '}':
+		t.kind = RightBrace
+	default:
+		return UnknownToken(t.value, l.line, l.column)
 	}
 
 	l.move()

@@ -30,8 +30,8 @@ func (l *Lexer) NextToken() Token {
 
 	curr := l.getCurr()
 
-	if isParenthesis(curr) {
-		return l.consumeParenthesis()
+	if isDelimeter(curr) {
+		return l.consumeDelimeter()
 	}
 
 	if beginsLiteral(curr) {
@@ -134,5 +134,7 @@ func (l *Lexer) skipWhiteSpace() {
 
 /*
 // Other arithmetic operators
+// escape charcters
+// strings
 // Conditions
 */
