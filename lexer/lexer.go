@@ -38,6 +38,10 @@ func (l *Lexer) NextToken() Token {
 		return l.recognizeLiteral()
 	}
 
+	if isColon(curr) {
+		return l.consumeColonOrDeclare()
+	}
+
 	if isOperator(curr) {
 		return l.consumeOperator()
 	}
@@ -59,7 +63,7 @@ func (l *Lexer) Tokenize() ([]Token, error) {
 	}
 
 	if token.kind == Unknown {
-		return nil, fmt.Errorf("Unrecognized character '%s' on line %d, column %d.", token.value, token.line, token.column)
+		return nil, fmt.Errorf("Unexpected token '%s' on line %d, column %d.", token.value, token.line, token.column)
 	}
 
 	return tokens, nil
@@ -91,6 +95,27 @@ func (l *Lexer) consumeParenthesis() Token {
 	}
 
 	l.move()
+	return t
+}
+
+// consumeColonOrDeclare consumes a colon or declare token
+func (l *Lexer) consumeColonOrDeclare() Token {
+	t := Token{
+		kind:   Colon,
+		value:  string(Colon),
+		column: l.column,
+		line:   l.line,
+	}
+
+	l.move()
+
+	// check if it is a `:=`
+	if next, _ := l.peek(); next == '=' {
+		t.kind = Declare
+		t.value = `:=`
+		l.move()
+	}
+
 	return t
 }
 
@@ -364,6 +389,12 @@ func (l *Lexer) consumeNumber() Token {
 
 func (l *Lexer) getUnknownToken(value string) Token {
 	return UnknownToken(value, l.line, l.column)
+}
+
+// updateCursor adds offset to the position and column of the lexer's cursor
+func (l *Lexer) updateCursor(offset int) {
+	l.position += offset
+	l.column += offset
 }
 
 // peek returns the byte at cursor and true if found,

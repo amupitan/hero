@@ -52,15 +52,22 @@ const (
 	BitOr  TokenType = "|"
 	BitXor TokenType = "^"
 
-	/// Assignment operator
-	Assign TokenType = "="
+	/// Assignment operators
+	Assign  TokenType = "="
+	Declare TokenType = ":="
 
 	/// Dot
 	Dot TokenType = "."
 
-	/// Parenthesis
+	/// Delimeters
+	Colon            TokenType = ":"
+	Comma            TokenType = ","
 	LeftParenthesis  TokenType = "("
 	RightParenthesis TokenType = ")"
+	LeftBracket      TokenType = "["
+	RightBracket     TokenType = "]"
+	LeftBrace        TokenType = "{"
+	RightBrace       TokenType = "}"
 
 	/// Special TokenTypes
 	EndOfInput TokenType = "end of input"
