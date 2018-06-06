@@ -19,6 +19,7 @@ const (
 	Float      TokenType = "float"
 	String     TokenType = "string"
 	Rune       TokenType = "rune"
+	Underscore TokenType = "_"
 
 	/// Keywords
 	Var   TokenType = "var"

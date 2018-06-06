@@ -213,7 +213,7 @@ func (l *Lexer) recognizeLiteral() Token {
 
 // consumeIdentifierOrKeyword recognizes an identifier or a keyword
 func (l *Lexer) consumeIdentifierOrKeyword() Token {
-	word := l.getNextWord(isLetter)
+	word := l.getNextWord(isValidIdentifierChar)
 	defer func() {
 		l.position += len(word)
 		l.column += len(word)
