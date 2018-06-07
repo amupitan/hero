@@ -156,7 +156,11 @@ func (l *Lexer) recognizeLiteral() Token {
 	}
 
 	if beginsNumber(b) {
-		return l.consumeNumber()
+		if t := l.consumeNumber(); t.kind != Unknown {
+			return t
+		}
+		// if is began with a literal, it is likely a dot
+		return l.consumeDot()
 	}
 
 	if beginsString(b) {

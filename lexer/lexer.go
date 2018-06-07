@@ -35,9 +35,7 @@ func (l *Lexer) NextToken() Token {
 	}
 
 	if beginsLiteral(curr) {
-		if t := l.recognizeLiteral(); t.kind != Unknown {
-			return t
-		}
+		return l.recognizeLiteral()
 	}
 
 	if isColon(curr) {
@@ -48,9 +46,6 @@ func (l *Lexer) NextToken() Token {
 		return l.consumeOperator()
 	}
 
-	if isDot(curr) {
-		return l.consumeDot()
-	}
 	return UnknownToken(string(curr), l.line, l.column)
 }
 
