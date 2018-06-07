@@ -283,14 +283,14 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 
 // consumeNumber consumes a number and returns an int or Float token
 func (l *Lexer) consumeNumber() Token {
-	fsm := fsm.New(states, states[0], nextState)
+	fsm := fsm.New(states, states[0], nextNumberState)
 
 	num, isNum := fsm.Run(l.input[l.position:])
-	if !isNum && len(num) == 0 {
+	if !isNum {
 		return UnknownToken(string(l.getCurr()), l.line, l.column)
 	}
 
-	// check for a decimal to determine whether Int or Float
+	// check for a decimal/exponent to determine whether Int or Float
 	var kind TokenType = Int
 	for _, b := range num {
 		if b == '.' || b == 'e' || b == 'E' {

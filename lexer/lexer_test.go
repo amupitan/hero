@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"errors"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -81,7 +82,7 @@ func Test_nextState(t *testing.T) {
 		{
 			"Integer with decimal point",
 			args{IntegerState, '.'},
-			BeginsFloatState,
+			FloatState,
 		},
 		{
 			"Integer with exponent,e",
@@ -106,8 +107,8 @@ func Test_nextState(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := nextState(tt.args.currentState, tt.args.input); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("nextState() = %v, want %v", got, tt.want)
+			if got := nextNumberState(tt.args.currentState, tt.args.input); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("nextNumberState() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -223,7 +224,7 @@ func TestLexer_consumeParenthesis(t *testing.T) {
 				line:     tt.fields.line,
 				column:   tt.fields.column,
 			}
-			if got := l.consumeParenthesis(); !reflect.DeepEqual(got, tt.want) {
+			if got := l.consumeDelimeter(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Lexer.consumeParenthesis() = %v, want %v", got, tt.want)
 			}
 		})
@@ -269,6 +270,85 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 			l.skipWhiteSpace()
 			if !reflect.DeepEqual(l, tt.want) {
 				t.Errorf("l = %v, want %v", l, tt.want)
+			}
+		})
+	}
+}
+
+func TestLexer_Tokenize(t *testing.T) {
+	type fields struct {
+		input string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []Token
+		wantErr error
+	}{
+		{
+			"integer addition operation",
+			fields{"1 + 1"},
+			[]Token{
+				Token{column: 1, kind: Int, line: 1, value: "1"},
+				Token{column: 3, kind: Plus, line: 1, value: "+"},
+				Token{column: 5, kind: Int, line: 1, value: "1"},
+			},
+			nil,
+		},
+		{
+			"dot and float starting with a dot",
+			fields{"..3"},
+			[]Token{
+				Token{column: 1, kind: Dot, line: 1, value: "."},
+				Token{column: 2, kind: Float, line: 1, value: ".3"},
+			},
+			nil,
+		},
+		{
+			"float ending with a dot and dot",
+			fields{"3.."},
+			[]Token{
+				Token{column: 1, kind: Float, line: 1, value: "3."},
+				Token{column: 3, kind: Dot, line: 1, value: "."},
+			},
+			nil,
+		},
+		{
+			"float ending with a dot and two dots",
+			fields{"3..."},
+			[]Token{
+				Token{column: 1, kind: Float, line: 1, value: "3."},
+				Token{column: 3, kind: Dot, line: 1, value: "."},
+				Token{column: 4, kind: Dot, line: 1, value: "."},
+			},
+			nil,
+		},
+		{
+			"float starting with a dot and dot",
+			fields{".3."},
+			[]Token{
+				Token{column: 1, kind: Float, line: 1, value: ".3"},
+				Token{column: 3, kind: Dot, line: 1, value: "."},
+			},
+			nil,
+		},
+		{
+			"symbol-integer addition operation",
+			fields{"@ + 1"},
+			nil,
+			errors.New(`Unexpected token '@' on line 1, column 1.`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := New(tt.fields.input)
+			got, err := l.Tokenize()
+			if !reflect.DeepEqual(err, tt.wantErr) {
+				t.Errorf("Lexer.Tokenize() error = %s, wantErr %s", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Lexer.Tokenize() = %v, want %v", got, tt.want)
 			}
 		})
 	}

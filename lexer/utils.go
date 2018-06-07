@@ -28,7 +28,7 @@ var states = []fsm.State{
 	NullState,
 }
 
-func nextState(currentState fsm.State, input byte) fsm.State {
+func nextNumberState(currentState fsm.State, input byte) fsm.State {
 	switch currentState.Value {
 	case InitialState.Value:
 		if isDigit(input) {
@@ -42,7 +42,7 @@ func nextState(currentState fsm.State, input byte) fsm.State {
 			return IntegerState
 		}
 		if input == '.' {
-			return BeginsFloatState
+			return FloatState
 		}
 		if unicode.ToLower(rune(input)) == 'e' {
 			return BeginExpState
