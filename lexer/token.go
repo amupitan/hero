@@ -58,9 +58,9 @@ const (
 	Declare TokenType = ":="
 
 	/// Dot
-	Dot TokenType = "."
-	// TwoDots TokenType = ".."
-	// Ellipses TokenType = "..."
+	Dot      TokenType = "."
+	TwoDots  TokenType = ".."
+	Ellipsis TokenType = "..."
 
 	/// Delimeters
 	Colon            TokenType = ":"

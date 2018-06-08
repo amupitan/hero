@@ -160,7 +160,7 @@ func (l *Lexer) recognizeLiteral() Token {
 			return t
 		}
 		// if it began with a number literal, it is likely a dot
-		return l.consumeDot()
+		return l.consumeDots()
 	}
 
 	if beginsString(b) {
@@ -212,16 +212,30 @@ func (l *Lexer) consumableKeyword(word string) Token {
 	return UnknownToken(word, line, col)
 }
 
-// consumeDot consumes a keyword token
-func (l *Lexer) consumeDot() Token {
+// consumeDots consumes a dot or dots token
+func (l *Lexer) consumeDots() Token {
 	t := Token{
 		kind:   Dot,
 		value:  string(Dot),
 		line:   l.line,
 		column: l.column,
 	}
-
 	l.move()
+
+	// check for potential second dot to form two dots
+	if next, _ := l.peek(); isDot(next) {
+		t.kind = TwoDots
+		t.value = string(TwoDots)
+		l.move()
+
+		// check for potential third dot to form ellipsis
+		if next, _ = l.peek(); isDot(next) {
+			t.kind = Ellipsis
+			t.value = string(Ellipsis)
+			l.move()
+		}
+	}
+
 	return t
 }
 

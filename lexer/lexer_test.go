@@ -296,16 +296,16 @@ func TestLexer_Tokenize(t *testing.T) {
 			nil,
 		},
 		{
-			"dot and float starting with a dot",
+			"two dots and int",
 			fields{"..3"},
 			[]Token{
-				Token{column: 1, kind: Dot, line: 1, value: "."},
-				Token{column: 2, kind: Float, line: 1, value: ".3"},
+				Token{column: 1, kind: TwoDots, line: 1, value: ".."},
+				Token{column: 3, kind: Int, line: 1, value: "3"},
 			},
 			nil,
 		},
 		{
-			"float ending with a dot and dot",
+			"int ending with two dots",
 			fields{"3.."},
 			[]Token{
 				Token{column: 1, kind: Float, line: 1, value: "3."},
@@ -314,12 +314,11 @@ func TestLexer_Tokenize(t *testing.T) {
 			nil,
 		},
 		{
-			"float ending with a dot and two dots",
+			"float ending with two dots",
 			fields{"3..."},
 			[]Token{
 				Token{column: 1, kind: Float, line: 1, value: "3."},
-				Token{column: 3, kind: Dot, line: 1, value: "."},
-				Token{column: 4, kind: Dot, line: 1, value: "."},
+				Token{column: 3, kind: TwoDots, line: 1, value: ".."},
 			},
 			nil,
 		},
@@ -363,6 +362,18 @@ func TestLexer_Tokenize(t *testing.T) {
 			fields{`a + "he"llo"`},
 			nil,
 			errors.New(`Unexpected token '"' on line 1, column 12.`),
+		},
+		{
+			"identifier with double dots and assignment",
+			fields{`a..value = 3`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 2, kind: TwoDots, line: 1, value: ".."},
+				Token{column: 4, kind: Identifier, line: 1, value: `value`},
+				Token{column: 10, kind: Assign, line: 1, value: `=`},
+				Token{column: 12, kind: Int, line: 1, value: `3`},
+			},
+			nil,
 		},
 	}
 	for _, tt := range tests {
