@@ -18,6 +18,7 @@ const (
 	Int        TokenType = "int"
 	Float      TokenType = "float"
 	String     TokenType = "string"
+	RawString  TokenType = "rstring"
 	Rune       TokenType = "rune"
 	Underscore TokenType = "_"
 

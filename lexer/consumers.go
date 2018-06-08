@@ -159,7 +159,7 @@ func (l *Lexer) recognizeLiteral() Token {
 		if t := l.consumeNumber(); t.kind != Unknown {
 			return t
 		}
-		// if is began with a literal, it is likely a dot
+		// if it began with a number literal, it is likely a dot
 		return l.consumeDot()
 	}
 
@@ -265,7 +265,31 @@ func (l *Lexer) consumeRune() Token {
 	return t
 }
 
-func (l *Lexer) consumeString() Token { return Token{} }
+func (l *Lexer) consumeString() Token {
+	nextState := &nextStringState
+	kind := String
+	if l.getCurr() == '`' {
+		nextState = &nextRawStringState
+		kind = RawString
+	}
+	fsm := fsm.New(stringStates, stringStates[0], *nextState)
+
+	str, ok := fsm.Run(l.input[l.position:])
+	if !ok {
+		return UnknownToken(string(l.getCurr()), l.line, l.column)
+	}
+
+	t := Token{
+		kind:   kind,
+		column: l.column,
+		line:   l.line,
+		value:  string(str),
+	}
+	l.position += len(str)
+	l.column += len(str)
+
+	return t
+}
 
 // consumableIdentifier returns an identifier/unknown token which can be consumed
 func (l *Lexer) consumableIdentifier(word string) Token {
@@ -287,7 +311,7 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 
 // consumeNumber consumes a number and returns an int or Float token
 func (l *Lexer) consumeNumber() Token {
-	fsm := fsm.New(states, states[0], nextNumberState)
+	fsm := fsm.New(numberStates, numberStates[0], nextNumberState)
 
 	num, isNum := fsm.Run(l.input[l.position:])
 	if !isNum {

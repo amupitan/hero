@@ -130,6 +130,5 @@ func (l *Lexer) skipWhiteSpace() {
 /*
 // Other arithmetic operators
 // escape charcters
-// strings
 // Conditions
 */

@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	// Number States
 	InitialState        = fsm.State{1, false}
 	IntegerState        = fsm.State{2, true}
 	BeginsFloatState    = fsm.State{3, false}
@@ -14,10 +15,16 @@ var (
 	BeginExpState       = fsm.State{5, false}
 	BeginSignedExpState = fsm.State{6, false}
 	ExponentState       = fsm.State{8, true}
-	NullState           = fsm.NullState
+
+	// String States
+	StringState    = fsm.State{9, false}
+	EndStringState = fsm.State{10, true}
+
+	// NullState
+	NullState = fsm.NullState
 )
 
-var states = []fsm.State{
+var numberStates = []fsm.State{
 	InitialState,
 	IntegerState,
 	BeginsFloatState,
@@ -26,6 +33,12 @@ var states = []fsm.State{
 	BeginSignedExpState,
 	ExponentState,
 	NullState,
+}
+
+var stringStates = []fsm.State{
+	InitialState,
+	StringState,
+	EndStringState,
 }
 
 func nextNumberState(currentState fsm.State, input byte) fsm.State {
@@ -76,6 +89,27 @@ func nextNumberState(currentState fsm.State, input byte) fsm.State {
 	}
 	return NullState
 }
+
+func nextStringStateGenerator(delimeter byte) fsm.Transition {
+	return func(currentState fsm.State, input byte) fsm.State {
+		switch currentState {
+		case InitialState:
+			if input == delimeter {
+				return StringState
+			}
+		case StringState:
+			if input == delimeter {
+				return EndStringState
+			}
+			return StringState
+		}
+		return NullState
+	}
+}
+
+var nextStringState = nextStringStateGenerator('"')
+
+var nextRawStringState = nextStringStateGenerator('`')
 
 func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
 func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }

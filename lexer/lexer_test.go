@@ -338,6 +338,32 @@ func TestLexer_Tokenize(t *testing.T) {
 			nil,
 			errors.New(`Unexpected token '@' on line 1, column 1.`),
 		},
+		{
+			"identifier-raw_string addition",
+			fields{"a + `hello`"},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: Plus, line: 1, value: "+"},
+				Token{column: 5, kind: RawString, line: 1, value: "`hello`"},
+			},
+			nil,
+		},
+		{
+			"identifier-string addition",
+			fields{`a + "hello"`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: Plus, line: 1, value: "+"},
+				Token{column: 5, kind: String, line: 1, value: `"hello"`},
+			},
+			nil,
+		},
+		{
+			"identifier-bad_string addition",
+			fields{`a + "he"llo"`},
+			nil,
+			errors.New(`Unexpected token '"' on line 1, column 12.`),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
