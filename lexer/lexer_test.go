@@ -375,6 +375,60 @@ func TestLexer_Tokenize(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			"identifier and identifier",
+			fields{"a && b"},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: And, line: 1, value: "&&"},
+				Token{column: 6, kind: Identifier, line: 1, value: "b"},
+			},
+			nil,
+		},
+		{
+			"identifier bit-or identifier",
+			fields{"a | b"},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: BitOr, line: 1, value: "|"},
+				Token{column: 5, kind: Identifier, line: 1, value: "b"},
+			},
+			nil,
+		},
+		{
+			"identifier bit-or-equals identifier",
+			fields{"a |= b"},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: BitOrEq, line: 1, value: "|="},
+				Token{column: 6, kind: Identifier, line: 1, value: "b"},
+			},
+			nil,
+		},
+		{
+			"identifier not-equals identifier",
+			fields{"a ~= b"},
+			nil,
+			errors.New(`Unexpected token '~' on line 1, column 3.`),
+		},
+		{
+			"identifier post-increment",
+			fields{`a++`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 2, kind: Increment, line: 1, value: "++"},
+			},
+			nil,
+		},
+		{
+			"identifier pre-decrement",
+			fields{`--a`},
+			[]Token{
+				Token{column: 1, kind: Decrement, line: 1, value: "--"},
+				Token{column: 3, kind: Identifier, line: 1, value: "a"},
+			},
+			nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -51,6 +51,9 @@ const (
 	DivEq   TokenType = "/="
 	ModEq   TokenType = "%="
 
+	Increment TokenType = "++"
+	Decrement TokenType = "--"
+
 	/// Comparison operators
 	GreaterThan        TokenType = ">"
 	GreaterThanOrEqual TokenType = ">="

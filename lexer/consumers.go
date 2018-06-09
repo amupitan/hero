@@ -105,6 +105,9 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 			t.kind = BitOrEq
 		case '^':
 			t.kind = BitXorEq
+		default:
+			l.retract()
+			return l.getUnknownToken(string(op))
 		}
 
 		// consume equals sign
@@ -117,8 +120,20 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 		switch op {
 		case '+':
 			t.kind = Plus
+			// check if increment and consume
+			if next == '+' {
+				t.kind = Increment
+				t.value = "++"
+				l.move()
+			}
 		case '-':
 			t.kind = Minus
+			// check if decrement and consume
+			if next == '-' {
+				t.kind = Decrement
+				t.value = "--"
+				l.move()
+			}
 		case '/':
 			t.kind = Div
 		case '*':
