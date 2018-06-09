@@ -412,6 +412,26 @@ func TestLexer_Tokenize(t *testing.T) {
 			errors.New(`Unexpected token '~' on line 1, column 3.`),
 		},
 		{
+			"identifier left shift identifier",
+			fields{`a << b`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: BitLeftShift, line: 1, value: "<<"},
+				Token{column: 6, kind: Identifier, line: 1, value: "b"},
+			},
+			nil,
+		},
+		{
+			"identifier right shift identifier",
+			fields{`a >> b`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: BitRightShift, line: 1, value: ">>"},
+				Token{column: 6, kind: Identifier, line: 1, value: "b"},
+			},
+			nil,
+		},
+		{
 			"identifier post-increment",
 			fields{`a++`},
 			[]Token{

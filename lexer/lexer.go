@@ -138,7 +138,7 @@ func (l *Lexer) skipWhiteSpace() {
 }
 
 /*
-// Other arithmetic operators
+// hex, oct,unicode
 // escape charcters
 // Conditions
 */

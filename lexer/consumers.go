@@ -71,8 +71,44 @@ func (l *Lexer) recognizeOperator() Token {
 		return t
 	}
 
-	// if it isn't arithmetic or boolean then it is comparison
+	// attempt to consume shift operator
+	if beginsBitShift(c) {
+		if t := l.consumeBitShiftOperator(); t.kind != Unknown {
+			return t
+		}
+	}
+
+	// if it isn't arithmetic, bit or boolean then it is comparison
 	return l.consumeComparisonOperator()
+}
+
+// consumebitShiftOperator consumes a bit shifting operator
+func (l *Lexer) consumeBitShiftOperator() Token {
+	c := l.getCurr()
+	t := Token{
+		column: l.column,
+		line:   l.line,
+	}
+	l.move()
+
+	if next, _ := l.peek(); c != next {
+		return l.getUnknownToken(string(next))
+	}
+
+	switch c {
+	case '<':
+		t.kind = BitLeftShift
+		t.value = string(BitLeftShift)
+	case '>':
+		t.kind = BitRightShift
+		t.value = string(BitRightShift)
+	default:
+		l.retract()
+		return l.getUnknownToken(string(c))
+	}
+
+	l.move()
+	return t
 }
 
 // consumeArithmeticOrBitOperator consumes an arithmetic or bit operator token
