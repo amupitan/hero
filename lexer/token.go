@@ -23,11 +23,20 @@ const (
 	Underscore TokenType = "_"
 
 	/// Keywords
-	Var   TokenType = "var"
-	Const TokenType = "const"
-	Null  TokenType = "null"
-	If    TokenType = "if"
-	While TokenType = "while"
+	Break     TokenType = "continue"
+	Class     TokenType = "class"
+	Const     TokenType = "const"
+	For       TokenType = "for"
+	False     TokenType = "false"
+	Func      TokenType = "func"
+	If        TokenType = "if"
+	Interface TokenType = "interface"
+	Import    TokenType = "import"
+	Null      TokenType = "null"
+	Package   TokenType = "package"
+	Return    TokenType = "return"
+	True      TokenType = "true"
+	Var       TokenType = "var"
 
 	/// Arithmetic operators
 	Plus  TokenType = "+"
@@ -92,11 +101,20 @@ const (
 )
 
 var keywords = map[TokenType]struct{}{
-	Var:   struct{}{},
-	Const: struct{}{},
-	Null:  struct{}{},
-	If:    struct{}{},
-	While: struct{}{},
+	Break:     struct{}{},
+	Class:     struct{}{},
+	Const:     struct{}{},
+	For:       struct{}{},
+	False:     struct{}{},
+	Func:      struct{}{},
+	If:        struct{}{},
+	Interface: struct{}{},
+	Import:    struct{}{},
+	Null:      struct{}{},
+	Package:   struct{}{},
+	Return:    struct{}{},
+	True:      struct{}{},
+	Var:       struct{}{},
 }
 
 var (
