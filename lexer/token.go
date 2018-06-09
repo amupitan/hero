@@ -91,7 +91,7 @@ const (
 	Ellipsis TokenType = "..."
 
 	/// NewLine
-	NewLine TokenType = "\n"
+	NewLine TokenType = `\n`
 
 	/// Delimeters
 	Colon            TokenType = ":"

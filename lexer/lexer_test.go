@@ -449,6 +449,28 @@ func TestLexer_Tokenize(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			"identifier post-decrement with comment",
+			fields{`a-- // decrement`},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 2, kind: Decrement, line: 1, value: "--"},
+			},
+			nil,
+		},
+		{
+			"identifier post-decrement with comment and new line",
+			fields{"a *= .2 // decrement\n\treturn a"},
+			[]Token{
+				Token{column: 1, kind: Identifier, line: 1, value: "a"},
+				Token{column: 3, kind: TimesEq, line: 1, value: "*="},
+				Token{column: 6, kind: Float, line: 1, value: ".2"},
+				Token{column: 21, kind: NewLine, line: 1, value: `\n`},
+				Token{column: 2, kind: Return, line: 2, value: "return"},
+				Token{column: 9, kind: Identifier, line: 2, value: "a"},
+			},
+			nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -460,6 +482,59 @@ func TestLexer_Tokenize(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Lexer.Tokenize() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLexer_skipComments(t *testing.T) {
+	type fields struct {
+		input    []byte
+		position int
+		line     int
+		column   int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   *Lexer
+	}{
+		{
+			"last line with comment",
+			fields{[]byte("a += 3 // this adds 3"), 7, 1, 8},
+			&Lexer{[]byte("a += 3 // this adds 3"), 21, 1, 22},
+		},
+		{
+			"line with comment",
+			fields{[]byte("a += 3 // this adds 3\nb = 3"), 7, 1, 8},
+			&Lexer{[]byte("a += 3 // this adds 3\nb = 3"), 21, 1, 22},
+		},
+		{
+			"line with empty comment",
+			fields{[]byte("a += 3 //\nb = 3"), 7, 1, 8},
+			&Lexer{[]byte("a += 3 //\nb = 3"), 9, 1, 10},
+		},
+		{
+			"space between characters on another line",
+			fields{[]byte("a /= 3\nw * 3"), 2, 1, 3},
+			&Lexer{[]byte("a /= 3\nw * 3"), 2, 1, 3},
+		},
+		{
+			"expressions between lines",
+			fields{[]byte("a = 3\nw * 3"), 5, 1, 6},
+			&Lexer{[]byte("a = 3\nw * 3"), 5, 1, 6},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := &Lexer{
+				input:    tt.fields.input,
+				position: tt.fields.position,
+				line:     tt.fields.line,
+				column:   tt.fields.column,
+			}
+			if l.skipComments(); !reflect.DeepEqual(l, tt.want) {
+				t.Errorf("l = %#v, want %#v", l, tt.want)
 			}
 		})
 	}

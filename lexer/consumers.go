@@ -44,12 +44,12 @@ func (l *Lexer) consumeNewline() Token {
 		column: l.column,
 		line:   l.line,
 		kind:   NewLine,
-		value:  "\n",
+		value:  `\n`,
 	}
 
 	l.position++
 	l.line++
-	l.column = 0
+	l.column = 1
 
 	return t
 }

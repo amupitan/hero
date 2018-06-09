@@ -24,6 +24,7 @@ func New(input string) *Lexer {
 /// NextToken returns the next recognized token or an error if none is found
 func (l *Lexer) NextToken() Token {
 	l.skipWhiteSpace()
+	l.skipComments()
 	if l.position >= len(l.input) {
 		return EndOfInputToken
 	}
@@ -57,9 +58,8 @@ func (l *Lexer) NextToken() Token {
 func (l *Lexer) Tokenize() ([]Token, error) {
 	var token Token
 	tokens := []Token{}
-	for token = l.NextToken(); token.kind != EndOfInput && token.kind != Unknown; {
+	for token = l.NextToken(); token.kind != EndOfInput && token.kind != Unknown; token = l.NextToken() {
 		tokens = append(tokens, token)
-		token = l.NextToken()
 	}
 
 	if token.kind == Unknown {
@@ -134,6 +134,31 @@ func (l *Lexer) skipWhiteSpace() {
 	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
 		l.position++
 		l.column++
+	}
+}
+
+// skipComments skips any comments on the same line
+func (l *Lexer) skipComments() {
+	c, _ := l.peek()
+	isComment := false
+
+	// search for double slash
+	if c == '/' {
+		l.move()
+		if c, _ = l.peek(); c == '/' {
+			l.move()
+			isComment = true
+		} else {
+			l.retract()
+		}
+	}
+
+	// skip comment content
+	if isComment {
+		for c, ok := l.peek(); ok && !isNewLine(c); c, ok = l.peek() {
+			// TODO(IMPROV) column increment doesn't have to be in the loop
+			l.move()
+		}
 	}
 }
 
