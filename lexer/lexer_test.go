@@ -256,7 +256,7 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 		{
 			"expressions between lines",
 			fields{[]byte("a = 3\nw * 3"), 5, 1, 5},
-			&Lexer{[]byte("a = 3\nw * 3"), 6, 2, 1},
+			&Lexer{[]byte("a = 3\nw * 3"), 5, 1, 5},
 		},
 	}
 	for _, tt := range tests {
@@ -269,7 +269,7 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 			}
 			l.skipWhiteSpace()
 			if !reflect.DeepEqual(l, tt.want) {
-				t.Errorf("l = %v, want %v", l, tt.want)
+				t.Errorf("l = %#v, want %#v", l, tt.want)
 			}
 		})
 	}

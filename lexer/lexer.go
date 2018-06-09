@@ -30,6 +30,10 @@ func (l *Lexer) NextToken() Token {
 
 	curr := l.getCurr()
 
+	if isNewLine(curr) {
+		return l.consumeNewline()
+	}
+
 	if isDelimeter(curr) {
 		return l.consumeDelimeter()
 	}
@@ -125,15 +129,11 @@ func (l *Lexer) peek() (byte, bool) {
 	return 0, false
 }
 
-// skipWhiteSpace skips all white spaces and new lines till the next non-space byte
+// skipWhiteSpace skips all white spaces till the next non-space or newline byte
 func (l *Lexer) skipWhiteSpace() {
 	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
 		l.position++
 		l.column++
-		if c == '\n' {
-			l.line++
-			l.column = 1
-		}
 	}
 }
 

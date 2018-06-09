@@ -38,6 +38,22 @@ func (l *Lexer) consumeDelimeter() Token {
 	return t
 }
 
+// consumeNewline consumes a new line
+func (l *Lexer) consumeNewline() Token {
+	t := Token{
+		column: l.column,
+		line:   l.line,
+		kind:   NewLine,
+		value:  "\n",
+	}
+
+	l.position++
+	l.line++
+	l.column = 0
+
+	return t
+}
+
 // consumeColonOrDeclare consumes a colon or declare token
 func (l *Lexer) consumeColonOrDeclare() Token {
 	t := Token{

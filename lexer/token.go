@@ -90,6 +90,9 @@ const (
 	TwoDots  TokenType = ".."
 	Ellipsis TokenType = "..."
 
+	/// NewLine
+	NewLine TokenType = "\n"
+
 	/// Delimeters
 	Colon            TokenType = ":"
 	Comma            TokenType = ","
