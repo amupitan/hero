@@ -366,19 +366,26 @@ func (l *Lexer) consumeString() Token {
 	}
 	fsm := fsm.New(stringStates, stringStates[0], *nextState)
 
-	str, ok := fsm.Run(l.input[l.position:])
+	buf, ok := fsm.Run(l.input[l.position:])
 	if !ok {
 		return UnknownToken(string(l.getCurr()), l.line, l.column)
 	}
+
+	length := buf.Len()
+
+	// remove starting delimeter
+	buf.ReadByte()
+	// remove trailing delimeter
+	buf.Truncate(length - 2)
 
 	t := Token{
 		kind:   kind,
 		column: l.column,
 		line:   l.line,
-		value:  string(str),
+		value:  buf.String(),
 	}
-	l.position += len(str)
-	l.column += len(str)
+	l.position += length
+	l.column += length
 
 	return t
 }
@@ -405,7 +412,8 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 func (l *Lexer) consumeNumber() Token {
 	fsm := fsm.New(numberStates, numberStates[0], nextNumberState)
 
-	num, isNum := fsm.Run(l.input[l.position:])
+	buf, isNum := fsm.Run(l.input[l.position:])
+	num := buf.String()
 	if !isNum {
 		return UnknownToken(string(l.getCurr()), l.line, l.column)
 	}
@@ -422,7 +430,7 @@ func (l *Lexer) consumeNumber() Token {
 		kind:   kind,
 		column: l.column,
 		line:   l.line,
-		value:  string(num),
+		value:  num,
 	}
 	l.position += len(num)
 	l.column += len(num)

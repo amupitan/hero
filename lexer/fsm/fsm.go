@@ -32,7 +32,7 @@ func New(states []State, initial State, getNextState Transition) *FSM {
 }
 
 /// Run returns a value and whether a valid value was found
-func (f *FSM) Run(input []byte) ([]byte, bool) {
+func (f *FSM) Run(input []byte) (*bytes.Buffer, bool) {
 	currentState := &f.initial
 
 	var output bytes.Buffer
@@ -50,6 +50,6 @@ func (f *FSM) Run(input []byte) ([]byte, bool) {
 	}
 
 	isValid := currentState.Accepts
-	return output.Bytes(), isValid
+	return &output, isValid
 
 }

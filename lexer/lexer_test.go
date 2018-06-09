@@ -343,7 +343,7 @@ func TestLexer_Tokenize(t *testing.T) {
 			[]Token{
 				Token{column: 1, kind: Identifier, line: 1, value: "a"},
 				Token{column: 3, kind: Plus, line: 1, value: "+"},
-				Token{column: 5, kind: RawString, line: 1, value: "`hello`"},
+				Token{column: 5, kind: RawString, line: 1, value: `hello`},
 			},
 			nil,
 		},
@@ -353,7 +353,7 @@ func TestLexer_Tokenize(t *testing.T) {
 			[]Token{
 				Token{column: 1, kind: Identifier, line: 1, value: "a"},
 				Token{column: 3, kind: Plus, line: 1, value: "+"},
-				Token{column: 5, kind: String, line: 1, value: `"hello"`},
+				Token{column: 5, kind: String, line: 1, value: `hello`},
 			},
 			nil,
 		},

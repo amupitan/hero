@@ -48,8 +48,8 @@ func TestFSM_Run(t *testing.T) {
 				getNextState: tt.fields.getNextState,
 			}
 			got, got1 := f.Run(tt.args.input)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FSM.Run() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got.Bytes(), tt.want) {
+				t.Errorf("FSM.Run() got = %v, want %v", got.String(), string(tt.want))
 			}
 			if got1 != tt.want1 {
 				t.Errorf("FSM.Run() got1 = %v, want %v", got1, tt.want1)
