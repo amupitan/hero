@@ -26,6 +26,7 @@ const (
 	Break     TokenType = "continue"
 	Class     TokenType = "class"
 	Const     TokenType = "const"
+	Else      TokenType = "else"
 	For       TokenType = "for"
 	False     TokenType = "false"
 	Func      TokenType = "func"
@@ -36,6 +37,7 @@ const (
 	Package   TokenType = "package"
 	Return    TokenType = "return"
 	True      TokenType = "true"
+	This      TokenType = "this"
 	Var       TokenType = "var"
 
 	/// Arithmetic operators
@@ -107,6 +109,7 @@ var keywords = map[TokenType]struct{}{
 	Break:     struct{}{},
 	Class:     struct{}{},
 	Const:     struct{}{},
+	Else:      struct{}{},
 	For:       struct{}{},
 	False:     struct{}{},
 	Func:      struct{}{},
@@ -117,6 +120,7 @@ var keywords = map[TokenType]struct{}{
 	Package:   struct{}{},
 	Return:    struct{}{},
 	True:      struct{}{},
+	This:      struct{}{},
 	Var:       struct{}{},
 }
 
