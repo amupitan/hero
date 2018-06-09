@@ -70,7 +70,7 @@ func (l *Lexer) getCurr() byte {
 	return l.input[l.position]
 }
 
-// moves the lexer a position forward
+// moves the cursor a step forward on the same line
 func (l *Lexer) move() {
 	l.position++
 	l.column++
@@ -104,6 +104,16 @@ func (l *Lexer) getUnknownToken(value string) Token {
 func (l *Lexer) updateCursor(offset int) {
 	l.position += offset
 	l.column += offset
+}
+
+// retract moves the cursor one step back on the same line
+func (l *Lexer) retract() {
+	if l.position > 0 {
+		l.position--
+	}
+	if l.column > 0 {
+		l.column--
+	}
 }
 
 // peek returns the byte at cursor and true if found,

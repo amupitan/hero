@@ -61,13 +61,14 @@ func (l *Lexer) consumeColonOrDeclare() Token {
 
 // recognizeOperator consumes an operator token
 func (l *Lexer) recognizeOperator() Token {
-	char := l.getCurr()
+	c := l.getCurr()
 
-	if isArithmeticOperator(char) || isBitOperator(char) {
-		if t := l.consumeArithmeticOrBitOperator(); t.kind == Unknown {
-			return t
+	if isArithmeticOperator(c) || isBitOperator(c) || c == '!' {
+		t := l.consumeArithmeticOrBitOperator()
+		if t.kind == Unknown && isBoolOperator(c) {
+			return l.consumableBoolOperator()
 		}
-		return l.consumableBoolOperator()
+		return t
 	}
 
 	// if it isn't arithmetic or boolean then it is comparison
@@ -136,13 +137,41 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 		return t
 	}
 
+	l.retract()
 	return l.getUnknownToken(string(next))
 }
 
 // consumableBoolOperator consumes a bool operator token
 func (l *Lexer) consumableBoolOperator() Token {
+	t := Token{
+		column: l.column,
+		line:   l.line,
+	}
 
-	return Token{}
+	c := l.getCurr()
+	l.move()
+	next, _ := l.peek()
+
+	if c != '!' && c != next {
+		return l.getUnknownToken(string(next))
+	}
+
+	switch c {
+	case '&':
+		t.kind = And
+		t.value = string(And)
+	case '|':
+		t.kind = Or
+		t.value = string(Or)
+	case '!':
+		t.kind = Not
+		t.value = string(Not)
+	}
+
+	if c != '!' {
+		l.move()
+	}
+	return t
 }
 
 // consumeComparisonOperator consumes an operator token
