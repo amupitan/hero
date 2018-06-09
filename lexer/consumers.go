@@ -59,42 +59,90 @@ func (l *Lexer) consumeColonOrDeclare() Token {
 	return t
 }
 
-// consumeOperator consumes an operator token
-func (l *Lexer) consumeOperator() Token {
-	defer l.move()
+// recognizeOperator consumes an operator token
+func (l *Lexer) recognizeOperator() Token {
 	char := l.getCurr()
 
-	if isArithmeticOperator(char) {
-		return l.consumeArithmeticOperator()
+	if isArithmeticOperator(char) || isBitOperator(char) {
+		if t := l.consumeArithmeticOrBitOperator(); t.kind == Unknown {
+			return t
+		}
+		return l.consumableBoolOperator()
 	}
 
-	// if it isn't arithmetic then it is comparison
+	// if it isn't arithmetic or boolean then it is comparison
 	return l.consumeComparisonOperator()
 }
 
-// consumeOperator consumes an operator token
-func (l *Lexer) consumeArithmeticOperator() Token {
+// consumeArithmeticOrBitOperator consumes an arithmetic or bit operator token
+func (l *Lexer) consumeArithmeticOrBitOperator() Token {
+	op := l.getCurr()
 	t := Token{
 		column: l.column,
 		line:   l.line,
+		value:  string(op),
+	}
+	l.move()
+
+	next, _ := l.peek()
+
+	if next == '=' {
+		switch op {
+		case '+':
+			t.kind = PlusEq
+		case '-':
+			t.kind = MinusEq
+		case '/':
+			t.kind = DivEq
+		case '*':
+			t.kind = TimesEq
+		case '%':
+			t.kind = ModEq
+		case '&':
+			t.kind = BitAndEq
+		case '|':
+			t.kind = BitOrEq
+		case '^':
+			t.kind = BitXorEq
+		}
+
+		// consume equals sign
+		t.value = string(op) + "="
+		l.move()
+
+		return t
+
+	} else if !isBoolOperator(next) {
+		switch op {
+		case '+':
+			t.kind = Plus
+		case '-':
+			t.kind = Minus
+		case '/':
+			t.kind = Div
+		case '*':
+			t.kind = Times
+		case '%':
+			t.kind = Mod
+		case '&':
+			t.kind = BitAnd
+		case '|':
+			t.kind = BitOr
+		case '^':
+			t.kind = BitXor
+		case '~':
+			t.kind = BitNot
+		}
+		return t
 	}
 
-	op := l.getCurr()
+	return l.getUnknownToken(string(next))
+}
 
-	switch op {
-	case '+':
-		t.kind = Plus
-	case '-':
-		t.kind = Minus
-	case '/':
-		t.kind = Div
-	case '*':
-		t.kind = Times
-	}
+// consumableBoolOperator consumes a bool operator token
+func (l *Lexer) consumableBoolOperator() Token {
 
-	t.value = string(op)
-
-	return t
+	return Token{}
 }
 
 // consumeComparisonOperator consumes an operator token
@@ -145,6 +193,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 		}
 	}
 
+	l.move()
 	return t
 }
 

@@ -36,6 +36,12 @@ const (
 	Div   TokenType = "/"
 	Mod   TokenType = "%"
 
+	PlusEq  TokenType = "+="
+	MinusEq TokenType = "-="
+	TimesEq TokenType = "*="
+	DivEq   TokenType = "/="
+	ModEq   TokenType = "%="
+
 	/// Comparison operators
 	GreaterThan        TokenType = ">"
 	GreaterThanOrEqual TokenType = ">="
@@ -52,6 +58,14 @@ const (
 	BitAnd TokenType = "&"
 	BitOr  TokenType = "|"
 	BitXor TokenType = "^"
+	BitNot TokenType = "~"
+
+	BitAndEq TokenType = "&="
+	BitOrEq  TokenType = "|="
+	BitXorEq TokenType = "^="
+
+	BitLeftShift  TokenType = "<<"
+	BitRightShift TokenType = ">>"
 
 	/// Assignment operators
 	Assign  TokenType = "="

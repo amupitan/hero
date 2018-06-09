@@ -43,7 +43,7 @@ func (l *Lexer) NextToken() Token {
 	}
 
 	if isOperator(curr) {
-		return l.consumeOperator()
+		return l.recognizeOperator()
 	}
 
 	return UnknownToken(string(curr), l.line, l.column)
