@@ -58,11 +58,11 @@ func (l *Lexer) NextToken() Token {
 func (l *Lexer) Tokenize() ([]Token, error) {
 	var token Token
 	tokens := []Token{}
-	for token = l.NextToken(); token.kind != EndOfInput && token.kind != Unknown; token = l.NextToken() {
+	for token = l.NextToken(); token.Kind != EndOfInput && token.Kind != Unknown; token = l.NextToken() {
 		tokens = append(tokens, token)
 	}
 
-	if token.kind == Unknown {
+	if token.Kind == Unknown {
 		return nil, fmt.Errorf(UnknownTokenError, token.value, token.line, token.column)
 	}
 
