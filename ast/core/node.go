@@ -1,4 +1,4 @@
-package ast
+package core
 
 type Node interface {
 	isDefinition() bool
