@@ -8,7 +8,7 @@ import (
 // Lexer performs lexical analysis on an input
 type Lexer struct {
 	input                  []byte
-	position, line, column int
+	position, Line, Column int
 }
 
 const UnknownTokenError = `Unexpected token '%s' on line %d, column %d.`
@@ -16,8 +16,8 @@ const UnknownTokenError = `Unexpected token '%s' on line %d, column %d.`
 func New(input string) *Lexer {
 	return &Lexer{
 		input:  []byte(input),
-		line:   1,
-		column: 1,
+		Line:   1,
+		Column: 1,
 	}
 }
 
@@ -51,7 +51,7 @@ func (l *Lexer) NextToken() Token {
 		return l.recognizeOperator()
 	}
 
-	return UnknownToken(string(curr), l.line, l.column)
+	return UnknownToken(string(curr), l.Line, l.Column)
 }
 
 // Tokenize returns all the tokens or an error
@@ -63,7 +63,7 @@ func (l *Lexer) Tokenize() ([]Token, error) {
 	}
 
 	if token.Type == Unknown {
-		return nil, fmt.Errorf(UnknownTokenError, token.value, token.line, token.column)
+		return nil, fmt.Errorf(UnknownTokenError, token.Value, token.Line, token.Column)
 	}
 
 	return tokens, nil
@@ -77,7 +77,7 @@ func (l *Lexer) getCurr() byte {
 // moves the cursor a step forward on the same line
 func (l *Lexer) move() {
 	l.position++
-	l.column++
+	l.Column++
 }
 
 // getNextWord reads all the chracters till the next white space
@@ -101,13 +101,13 @@ func (l *Lexer) getNextWord(isAllowed func(b byte) bool) string {
 }
 
 func (l *Lexer) getUnknownToken(value string) Token {
-	return UnknownToken(value, l.line, l.column)
+	return UnknownToken(value, l.Line, l.Column)
 }
 
 // updateCursor adds offset to the position and column of the lexer's cursor
 func (l *Lexer) updateCursor(offset int) {
 	l.position += offset
-	l.column += offset
+	l.Column += offset
 }
 
 // retract moves the cursor one step back on the same line
@@ -115,8 +115,8 @@ func (l *Lexer) retract() {
 	if l.position > 0 {
 		l.position--
 	}
-	if l.column > 0 {
-		l.column--
+	if l.Column > 0 {
+		l.Column--
 	}
 }
 
@@ -133,7 +133,7 @@ func (l *Lexer) peek() (byte, bool) {
 func (l *Lexer) skipWhiteSpace() {
 	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
 		l.position++
-		l.column++
+		l.Column++
 	}
 }
 

@@ -8,8 +8,8 @@ type TokenType string
 
 type Token struct {
 	Type         TokenType
-	value        string
-	line, column int
+	Value        string
+	Line, Column int
 }
 
 const (
@@ -128,10 +128,10 @@ var keywords = map[TokenType]struct{}{
 }
 
 var (
-	UnknownToken    = func(value string, line, column int) Token { return Token{Unknown, value, line, column} }
+	UnknownToken    = func(value string, Line, Column int) Token { return Token{Unknown, value, Line, Column} }
 	EndOfInputToken = Token{EndOfInput, string(EndOfInput), -1, -1}
 )
 
 func (t Token) String() string {
-	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.value, t.Type, t.line, t.column)
+	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.Value, t.Type, t.Line, t.Column)
 }

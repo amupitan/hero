@@ -118,8 +118,8 @@ func TestLexer_getCurr(t *testing.T) {
 	type fields struct {
 		input    []byte
 		position int
-		line     int
-		column   int
+		Line     int
+		Column   int
 	}
 	input := []byte("1 + 2")
 	randIdx := rand.Int() % len(input)
@@ -149,8 +149,8 @@ func TestLexer_getCurr(t *testing.T) {
 			l := &Lexer{
 				input:    tt.fields.input,
 				position: tt.fields.position,
-				line:     tt.fields.line,
-				column:   tt.fields.column,
+				Line:     tt.fields.Line,
+				Column:   tt.fields.Column,
 			}
 			if got := l.getCurr(); got != tt.want {
 				t.Errorf("Lexer.getCurr() = %v, want %v", got, tt.want)
@@ -163,8 +163,8 @@ func TestLexer_move(t *testing.T) {
 	type fields struct {
 		input    []byte
 		position int
-		line     int
-		column   int
+		Line     int
+		Column   int
 	}
 	tests := []struct {
 		name   string
@@ -172,7 +172,7 @@ func TestLexer_move(t *testing.T) {
 		want   *Lexer
 	}{
 		{
-			"only position and column are updated after calling move",
+			"only position and Column are updated after calling move",
 			fields{[]byte("test"), 1, 1, 1},
 			&Lexer{[]byte("test"), 2, 1, 2},
 		},
@@ -182,8 +182,8 @@ func TestLexer_move(t *testing.T) {
 			l := &Lexer{
 				input:    tt.fields.input,
 				position: tt.fields.position,
-				line:     tt.fields.line,
-				column:   tt.fields.column,
+				Line:     tt.fields.Line,
+				Column:   tt.fields.Column,
 			}
 			l.move()
 			if !reflect.DeepEqual(l, tt.want) {
@@ -197,8 +197,8 @@ func TestLexer_consumeParenthesis(t *testing.T) {
 	type fields struct {
 		input    []byte
 		position int
-		line     int
-		column   int
+		Line     int
+		Column   int
 	}
 	tests := []struct {
 		name   string
@@ -221,8 +221,8 @@ func TestLexer_consumeParenthesis(t *testing.T) {
 			l := &Lexer{
 				input:    tt.fields.input,
 				position: tt.fields.position,
-				line:     tt.fields.line,
-				column:   tt.fields.column,
+				Line:     tt.fields.Line,
+				Column:   tt.fields.Column,
 			}
 			if got := l.consumeDelimeter(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Lexer.consumeParenthesis() = %v, want %v", got, tt.want)
@@ -235,8 +235,8 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 	type fields struct {
 		input    []byte
 		position int
-		line     int
-		column   int
+		Line     int
+		Column   int
 	}
 	tests := []struct {
 		name   string
@@ -244,12 +244,12 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 		want   *Lexer
 	}{
 		{
-			"space between characters on first line",
+			"space between characters on first Line",
 			fields{[]byte("a = 3"), 1, 1, 2},
 			&Lexer{[]byte("a = 3"), 2, 1, 3},
 		},
 		{
-			"space between characters on another line",
+			"space between characters on another Line",
 			fields{[]byte("a = 3\nw * 3"), 7, 2, 2},
 			&Lexer{[]byte("a = 3\nw * 3"), 8, 2, 3},
 		},
@@ -264,8 +264,8 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 			l := &Lexer{
 				input:    tt.fields.input,
 				position: tt.fields.position,
-				line:     tt.fields.line,
-				column:   tt.fields.column,
+				Line:     tt.fields.Line,
+				Column:   tt.fields.Column,
 			}
 			l.skipWhiteSpace()
 			if !reflect.DeepEqual(l, tt.want) {
@@ -289,9 +289,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"integer addition operation",
 			fields{"1 + 1"},
 			[]Token{
-				Token{column: 1, Type: Int, line: 1, value: "1"},
-				Token{column: 3, Type: Plus, line: 1, value: "+"},
-				Token{column: 5, Type: Int, line: 1, value: "1"},
+				Token{Column: 1, Type: Int, Line: 1, Value: "1"},
+				Token{Column: 3, Type: Plus, Line: 1, Value: "+"},
+				Token{Column: 5, Type: Int, Line: 1, Value: "1"},
 			},
 			nil,
 		},
@@ -299,8 +299,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"two dots and int",
 			fields{"..3"},
 			[]Token{
-				Token{column: 1, Type: TwoDots, line: 1, value: ".."},
-				Token{column: 3, Type: Int, line: 1, value: "3"},
+				Token{Column: 1, Type: TwoDots, Line: 1, Value: ".."},
+				Token{Column: 3, Type: Int, Line: 1, Value: "3"},
 			},
 			nil,
 		},
@@ -308,8 +308,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"int ending with two dots",
 			fields{"3.."},
 			[]Token{
-				Token{column: 1, Type: Float, line: 1, value: "3."},
-				Token{column: 3, Type: Dot, line: 1, value: "."},
+				Token{Column: 1, Type: Float, Line: 1, Value: "3."},
+				Token{Column: 3, Type: Dot, Line: 1, Value: "."},
 			},
 			nil,
 		},
@@ -317,8 +317,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"float ending with two dots",
 			fields{"3..."},
 			[]Token{
-				Token{column: 1, Type: Float, line: 1, value: "3."},
-				Token{column: 3, Type: TwoDots, line: 1, value: ".."},
+				Token{Column: 1, Type: Float, Line: 1, Value: "3."},
+				Token{Column: 3, Type: TwoDots, Line: 1, Value: ".."},
 			},
 			nil,
 		},
@@ -326,8 +326,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"float starting with a dot and dot",
 			fields{".3."},
 			[]Token{
-				Token{column: 1, Type: Float, line: 1, value: ".3"},
-				Token{column: 3, Type: Dot, line: 1, value: "."},
+				Token{Column: 1, Type: Float, Line: 1, Value: ".3"},
+				Token{Column: 3, Type: Dot, Line: 1, Value: "."},
 			},
 			nil,
 		},
@@ -341,9 +341,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier-raw_string addition",
 			fields{"a + `hello`"},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: Plus, line: 1, value: "+"},
-				Token{column: 5, Type: RawString, line: 1, value: `hello`},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: Plus, Line: 1, Value: "+"},
+				Token{Column: 5, Type: RawString, Line: 1, Value: `hello`},
 			},
 			nil,
 		},
@@ -351,9 +351,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier-string addition",
 			fields{`a + "hello"`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: Plus, line: 1, value: "+"},
-				Token{column: 5, Type: String, line: 1, value: `hello`},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: Plus, Line: 1, Value: "+"},
+				Token{Column: 5, Type: String, Line: 1, Value: `hello`},
 			},
 			nil,
 		},
@@ -367,11 +367,11 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier with double dots and assignment",
 			fields{`a..value = 3`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 2, Type: TwoDots, line: 1, value: ".."},
-				Token{column: 4, Type: Identifier, line: 1, value: `value`},
-				Token{column: 10, Type: Assign, line: 1, value: `=`},
-				Token{column: 12, Type: Int, line: 1, value: `3`},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 2, Type: TwoDots, Line: 1, Value: ".."},
+				Token{Column: 4, Type: Identifier, Line: 1, Value: `value`},
+				Token{Column: 10, Type: Assign, Line: 1, Value: `=`},
+				Token{Column: 12, Type: Int, Line: 1, Value: `3`},
 			},
 			nil,
 		},
@@ -379,9 +379,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier and identifier",
 			fields{"a && b"},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: And, line: 1, value: "&&"},
-				Token{column: 6, Type: Identifier, line: 1, value: "b"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: And, Line: 1, Value: "&&"},
+				Token{Column: 6, Type: Identifier, Line: 1, Value: "b"},
 			},
 			nil,
 		},
@@ -389,9 +389,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier bit-or identifier",
 			fields{"a | b"},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: BitOr, line: 1, value: "|"},
-				Token{column: 5, Type: Identifier, line: 1, value: "b"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: BitOr, Line: 1, Value: "|"},
+				Token{Column: 5, Type: Identifier, Line: 1, Value: "b"},
 			},
 			nil,
 		},
@@ -399,9 +399,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier bit-or-equals identifier",
 			fields{"a |= b"},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: BitOrEq, line: 1, value: "|="},
-				Token{column: 6, Type: Identifier, line: 1, value: "b"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: BitOrEq, Line: 1, Value: "|="},
+				Token{Column: 6, Type: Identifier, Line: 1, Value: "b"},
 			},
 			nil,
 		},
@@ -415,9 +415,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier left shift identifier",
 			fields{`a << b`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: BitLeftShift, line: 1, value: "<<"},
-				Token{column: 6, Type: Identifier, line: 1, value: "b"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: BitLeftShift, Line: 1, Value: "<<"},
+				Token{Column: 6, Type: Identifier, Line: 1, Value: "b"},
 			},
 			nil,
 		},
@@ -425,9 +425,9 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier right shift identifier",
 			fields{`a >> b`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: BitRightShift, line: 1, value: ">>"},
-				Token{column: 6, Type: Identifier, line: 1, value: "b"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: BitRightShift, Line: 1, Value: ">>"},
+				Token{Column: 6, Type: Identifier, Line: 1, Value: "b"},
 			},
 			nil,
 		},
@@ -435,8 +435,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier post-increment",
 			fields{`a++`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 2, Type: Increment, line: 1, value: "++"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 2, Type: Increment, Line: 1, Value: "++"},
 			},
 			nil,
 		},
@@ -444,8 +444,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier pre-decrement",
 			fields{`--a`},
 			[]Token{
-				Token{column: 1, Type: Decrement, line: 1, value: "--"},
-				Token{column: 3, Type: Identifier, line: 1, value: "a"},
+				Token{Column: 1, Type: Decrement, Line: 1, Value: "--"},
+				Token{Column: 3, Type: Identifier, Line: 1, Value: "a"},
 			},
 			nil,
 		},
@@ -453,8 +453,8 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier post-decrement with comment",
 			fields{`a-- // decrement`},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 2, Type: Decrement, line: 1, value: "--"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 2, Type: Decrement, Line: 1, Value: "--"},
 			},
 			nil,
 		},
@@ -462,12 +462,12 @@ func TestLexer_Tokenize(t *testing.T) {
 			"identifier post-decrement with comment and new line",
 			fields{"a *= .2 // decrement\n\treturn a"},
 			[]Token{
-				Token{column: 1, Type: Identifier, line: 1, value: "a"},
-				Token{column: 3, Type: TimesEq, line: 1, value: "*="},
-				Token{column: 6, Type: Float, line: 1, value: ".2"},
-				Token{column: 21, Type: NewLine, line: 1, value: `\n`},
-				Token{column: 2, Type: Return, line: 2, value: "return"},
-				Token{column: 9, Type: Identifier, line: 2, value: "a"},
+				Token{Column: 1, Type: Identifier, Line: 1, Value: "a"},
+				Token{Column: 3, Type: TimesEq, Line: 1, Value: "*="},
+				Token{Column: 6, Type: Float, Line: 1, Value: ".2"},
+				Token{Column: 21, Type: NewLine, Line: 1, Value: `\n`},
+				Token{Column: 2, Type: Return, Line: 2, Value: "return"},
+				Token{Column: 9, Type: Identifier, Line: 2, Value: "a"},
 			},
 			nil,
 		},
@@ -491,8 +491,8 @@ func TestLexer_skipComments(t *testing.T) {
 	type fields struct {
 		input    []byte
 		position int
-		line     int
-		column   int
+		Line     int
+		Column   int
 	}
 	tests := []struct {
 		name   string
@@ -500,22 +500,22 @@ func TestLexer_skipComments(t *testing.T) {
 		want   *Lexer
 	}{
 		{
-			"last line with comment",
+			"last Line with comment",
 			fields{[]byte("a += 3 // this adds 3"), 7, 1, 8},
 			&Lexer{[]byte("a += 3 // this adds 3"), 21, 1, 22},
 		},
 		{
-			"line with comment",
+			"Line with comment",
 			fields{[]byte("a += 3 // this adds 3\nb = 3"), 7, 1, 8},
 			&Lexer{[]byte("a += 3 // this adds 3\nb = 3"), 21, 1, 22},
 		},
 		{
-			"line with empty comment",
+			"Line with empty comment",
 			fields{[]byte("a += 3 //\nb = 3"), 7, 1, 8},
 			&Lexer{[]byte("a += 3 //\nb = 3"), 9, 1, 10},
 		},
 		{
-			"space between characters on another line",
+			"space between characters on another Line",
 			fields{[]byte("a /= 3\nw * 3"), 2, 1, 3},
 			&Lexer{[]byte("a /= 3\nw * 3"), 2, 1, 3},
 		},
@@ -530,8 +530,8 @@ func TestLexer_skipComments(t *testing.T) {
 			l := &Lexer{
 				input:    tt.fields.input,
 				position: tt.fields.position,
-				line:     tt.fields.line,
-				column:   tt.fields.column,
+				Line:     tt.fields.Line,
+				Column:   tt.fields.Column,
 			}
 			if l.skipComments(); !reflect.DeepEqual(l, tt.want) {
 				t.Errorf("l = %#v, want %#v", l, tt.want)

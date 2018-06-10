@@ -10,9 +10,9 @@ import (
 func (l *Lexer) consumeDelimeter() Token {
 	c := l.getCurr()
 	t := Token{
-		column: l.column,
-		line:   l.line,
-		value:  string(c),
+		Column: l.Column,
+		Line:   l.Line,
+		Value:  string(c),
 	}
 
 	switch c {
@@ -31,7 +31,7 @@ func (l *Lexer) consumeDelimeter() Token {
 	case '}':
 		t.Type = RightBrace
 	default:
-		return UnknownToken(t.value, l.line, l.column)
+		return UnknownToken(t.Value, l.Line, l.Column)
 	}
 
 	l.move()
@@ -41,15 +41,15 @@ func (l *Lexer) consumeDelimeter() Token {
 // consumeNewline consumes a new line
 func (l *Lexer) consumeNewline() Token {
 	t := Token{
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 		Type:   NewLine,
-		value:  `\n`,
+		Value:  `\n`,
 	}
 
 	l.position++
-	l.line++
-	l.column = 1
+	l.Line++
+	l.Column = 1
 
 	return t
 }
@@ -58,9 +58,9 @@ func (l *Lexer) consumeNewline() Token {
 func (l *Lexer) consumeColonOrDeclare() Token {
 	t := Token{
 		Type:   Colon,
-		value:  string(Colon),
-		column: l.column,
-		line:   l.line,
+		Value:  string(Colon),
+		Column: l.Column,
+		Line:   l.Line,
 	}
 
 	l.move()
@@ -68,7 +68,7 @@ func (l *Lexer) consumeColonOrDeclare() Token {
 	// check if it is a `:=`
 	if next, _ := l.peek(); next == '=' {
 		t.Type = Declare
-		t.value = `:=`
+		t.Value = `:=`
 		l.move()
 	}
 
@@ -102,8 +102,8 @@ func (l *Lexer) recognizeOperator() Token {
 func (l *Lexer) consumeBitShiftOperator() Token {
 	c := l.getCurr()
 	t := Token{
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 	l.move()
 
@@ -114,10 +114,10 @@ func (l *Lexer) consumeBitShiftOperator() Token {
 	switch c {
 	case '<':
 		t.Type = BitLeftShift
-		t.value = string(BitLeftShift)
+		t.Value = string(BitLeftShift)
 	case '>':
 		t.Type = BitRightShift
-		t.value = string(BitRightShift)
+		t.Value = string(BitRightShift)
 	default:
 		l.retract()
 		return l.getUnknownToken(string(c))
@@ -131,9 +131,9 @@ func (l *Lexer) consumeBitShiftOperator() Token {
 func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 	op := l.getCurr()
 	t := Token{
-		column: l.column,
-		line:   l.line,
-		value:  string(op),
+		Column: l.Column,
+		Line:   l.Line,
+		Value:  string(op),
 	}
 	l.move()
 
@@ -163,7 +163,7 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 		}
 
 		// consume equals sign
-		t.value = string(op) + "="
+		t.Value = string(op) + "="
 		l.move()
 
 		return t
@@ -175,7 +175,7 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 			// check if increment and consume
 			if next == '+' {
 				t.Type = Increment
-				t.value = "++"
+				t.Value = "++"
 				l.move()
 			}
 		case '-':
@@ -183,7 +183,7 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 			// check if decrement and consume
 			if next == '-' {
 				t.Type = Decrement
-				t.value = "--"
+				t.Value = "--"
 				l.move()
 			}
 		case '/':
@@ -211,8 +211,8 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 // consumableBoolOperator consumes a bool operator token
 func (l *Lexer) consumableBoolOperator() Token {
 	t := Token{
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 
 	c := l.getCurr()
@@ -226,13 +226,13 @@ func (l *Lexer) consumableBoolOperator() Token {
 	switch c {
 	case '&':
 		t.Type = And
-		t.value = string(And)
+		t.Value = string(And)
 	case '|':
 		t.Type = Or
-		t.value = string(Or)
+		t.Value = string(Or)
 	case '!':
 		t.Type = Not
-		t.value = string(Not)
+		t.Value = string(Not)
 	}
 
 	if c != '!' {
@@ -244,8 +244,8 @@ func (l *Lexer) consumableBoolOperator() Token {
 // consumeComparisonOperator consumes an operator token
 func (l *Lexer) consumeComparisonOperator() Token {
 	t := Token{
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 
 	char := l.getCurr()
@@ -266,26 +266,26 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	case '<':
 		if hasEquals {
 			t.Type = LessThanOrEqual
-			t.value = "<="
+			t.Value = "<="
 		} else {
 			t.Type = LessThan
-			t.value = "<"
+			t.Value = "<"
 		}
 	case '>':
 		if hasEquals {
 			t.Type = GreaterThanOrEqual
-			t.value = ">="
+			t.Value = ">="
 		} else {
 			t.Type = GreaterThan
-			t.value = ">"
+			t.Value = ">"
 		}
 	case '=':
 		if hasEquals {
 			t.Type = Equal
-			t.value = "=="
+			t.Value = "=="
 		} else {
 			t.Type = Assign
-			t.value = "="
+			t.Value = "="
 		}
 	}
 
@@ -316,7 +316,7 @@ func (l *Lexer) recognizeLiteral() Token {
 		return l.consumeRune()
 	}
 
-	return UnknownToken(string(b), l.line, l.column)
+	return UnknownToken(string(b), l.Line, l.Column)
 
 }
 
@@ -325,7 +325,7 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 	word := l.getNextWord(isValidIdentifierChar)
 	defer func() {
 		l.position += len(word)
-		l.column += len(word)
+		l.Column += len(word)
 	}()
 
 	if t := l.consumableKeyword(word); t.Type != Unknown {
@@ -334,49 +334,49 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 
 	return Token{
 		Type:   Identifier,
-		value:  word,
-		column: l.column,
-		line:   l.line,
+		Value:  word,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 }
 
 // consumableKeyword returns a keyword/unknown token which can be consumed
 func (l *Lexer) consumableKeyword(word string) Token {
-	col, line := l.column, l.line
+	col, Line := l.Column, l.Line
 
 	keyword := TokenType(word)
 	if _, ok := keywords[keyword]; ok {
 		return Token{
 			Type:   keyword,
-			value:  word,
-			column: col,
-			line:   line,
+			Value:  word,
+			Column: col,
+			Line:   Line,
 		}
 	}
 
-	return UnknownToken(word, line, col)
+	return UnknownToken(word, Line, col)
 }
 
 // consumeDots consumes a dot or dots token
 func (l *Lexer) consumeDots() Token {
 	t := Token{
 		Type:   Dot,
-		value:  string(Dot),
-		line:   l.line,
-		column: l.column,
+		Value:  string(Dot),
+		Line:   l.Line,
+		Column: l.Column,
 	}
 	l.move()
 
 	// check for potential second dot to form two dots
 	if next, _ := l.peek(); isDot(next) {
 		t.Type = TwoDots
-		t.value = string(TwoDots)
+		t.Value = string(TwoDots)
 		l.move()
 
 		// check for potential third dot to form ellipsis
 		if next, _ = l.peek(); isDot(next) {
 			t.Type = Ellipsis
-			t.value = string(Ellipsis)
+			t.Value = string(Ellipsis)
 			l.move()
 		}
 	}
@@ -415,10 +415,10 @@ func (l *Lexer) consumeRune() Token {
 	value.WriteByte(c)
 
 	t := Token{
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 		Type:   Rune,
-		value:  value.String(),
+		Value:  value.String(),
 	}
 	l.move()
 	return t
@@ -435,7 +435,7 @@ func (l *Lexer) consumeString() Token {
 
 	buf, ok := fsm.Run(l.input[l.position:])
 	if !ok {
-		return UnknownToken(string(l.getCurr()), l.line, l.column)
+		return UnknownToken(string(l.getCurr()), l.Line, l.Column)
 	}
 
 	length := buf.Len()
@@ -447,12 +447,12 @@ func (l *Lexer) consumeString() Token {
 
 	t := Token{
 		Type:   Type,
-		column: l.column,
-		line:   l.line,
-		value:  buf.String(),
+		Column: l.Column,
+		Line:   l.Line,
+		Value:  buf.String(),
 	}
 	l.position += length
-	l.column += length
+	l.Column += length
 
 	return t
 }
@@ -461,8 +461,8 @@ func (l *Lexer) consumeString() Token {
 func (l *Lexer) consumableIdentifier(word string) Token {
 	t := Token{
 		Type:   Identifier,
-		column: l.column,
-		line:   l.line,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 
 	for _, c := range word {
@@ -471,7 +471,7 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 		}
 	}
 
-	t.value = word
+	t.Value = word
 	return t
 }
 
@@ -482,7 +482,7 @@ func (l *Lexer) consumeNumber() Token {
 	buf, isNum := fsm.Run(l.input[l.position:])
 	num := buf.String()
 	if !isNum {
-		return UnknownToken(string(l.getCurr()), l.line, l.column)
+		return UnknownToken(string(l.getCurr()), l.Line, l.Column)
 	}
 
 	// check for a decimal/exponent to determine whether Int or Float
@@ -495,12 +495,12 @@ func (l *Lexer) consumeNumber() Token {
 
 	t := Token{
 		Type:   Type,
-		column: l.column,
-		line:   l.line,
-		value:  num,
+		Column: l.Column,
+		Line:   l.Line,
+		Value:  num,
 	}
 	l.position += len(num)
-	l.column += len(num)
+	l.Column += len(num)
 
 	return t
 }
