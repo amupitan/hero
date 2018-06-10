@@ -17,19 +17,19 @@ func (l *Lexer) consumeDelimeter() Token {
 
 	switch c {
 	case ',':
-		t.Kind = Comma
+		t.Type = Comma
 	case '(':
-		t.Kind = LeftParenthesis
+		t.Type = LeftParenthesis
 	case ')':
-		t.Kind = RightParenthesis
+		t.Type = RightParenthesis
 	case '[':
-		t.Kind = LeftBracket
+		t.Type = LeftBracket
 	case ']':
-		t.Kind = RightBracket
+		t.Type = RightBracket
 	case '{':
-		t.Kind = LeftBrace
+		t.Type = LeftBrace
 	case '}':
-		t.Kind = RightBrace
+		t.Type = RightBrace
 	default:
 		return UnknownToken(t.value, l.line, l.column)
 	}
@@ -43,7 +43,7 @@ func (l *Lexer) consumeNewline() Token {
 	t := Token{
 		column: l.column,
 		line:   l.line,
-		Kind:   NewLine,
+		Type:   NewLine,
 		value:  `\n`,
 	}
 
@@ -57,7 +57,7 @@ func (l *Lexer) consumeNewline() Token {
 // consumeColonOrDeclare consumes a colon or declare token
 func (l *Lexer) consumeColonOrDeclare() Token {
 	t := Token{
-		Kind:   Colon,
+		Type:   Colon,
 		value:  string(Colon),
 		column: l.column,
 		line:   l.line,
@@ -67,7 +67,7 @@ func (l *Lexer) consumeColonOrDeclare() Token {
 
 	// check if it is a `:=`
 	if next, _ := l.peek(); next == '=' {
-		t.Kind = Declare
+		t.Type = Declare
 		t.value = `:=`
 		l.move()
 	}
@@ -81,7 +81,7 @@ func (l *Lexer) recognizeOperator() Token {
 
 	if isArithmeticOperator(c) || isBitOperator(c) || c == '!' {
 		t := l.consumeArithmeticOrBitOperator()
-		if t.Kind == Unknown && isBoolOperator(c) {
+		if t.Type == Unknown && isBoolOperator(c) {
 			return l.consumableBoolOperator()
 		}
 		return t
@@ -89,7 +89,7 @@ func (l *Lexer) recognizeOperator() Token {
 
 	// attempt to consume shift operator
 	if beginsBitShift(c) {
-		if t := l.consumeBitShiftOperator(); t.Kind != Unknown {
+		if t := l.consumeBitShiftOperator(); t.Type != Unknown {
 			return t
 		}
 	}
@@ -113,10 +113,10 @@ func (l *Lexer) consumeBitShiftOperator() Token {
 
 	switch c {
 	case '<':
-		t.Kind = BitLeftShift
+		t.Type = BitLeftShift
 		t.value = string(BitLeftShift)
 	case '>':
-		t.Kind = BitRightShift
+		t.Type = BitRightShift
 		t.value = string(BitRightShift)
 	default:
 		l.retract()
@@ -142,21 +142,21 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 	if next == '=' {
 		switch op {
 		case '+':
-			t.Kind = PlusEq
+			t.Type = PlusEq
 		case '-':
-			t.Kind = MinusEq
+			t.Type = MinusEq
 		case '/':
-			t.Kind = DivEq
+			t.Type = DivEq
 		case '*':
-			t.Kind = TimesEq
+			t.Type = TimesEq
 		case '%':
-			t.Kind = ModEq
+			t.Type = ModEq
 		case '&':
-			t.Kind = BitAndEq
+			t.Type = BitAndEq
 		case '|':
-			t.Kind = BitOrEq
+			t.Type = BitOrEq
 		case '^':
-			t.Kind = BitXorEq
+			t.Type = BitXorEq
 		default:
 			l.retract()
 			return l.getUnknownToken(string(op))
@@ -171,35 +171,35 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 	} else if !isBoolOperator(next) {
 		switch op {
 		case '+':
-			t.Kind = Plus
+			t.Type = Plus
 			// check if increment and consume
 			if next == '+' {
-				t.Kind = Increment
+				t.Type = Increment
 				t.value = "++"
 				l.move()
 			}
 		case '-':
-			t.Kind = Minus
+			t.Type = Minus
 			// check if decrement and consume
 			if next == '-' {
-				t.Kind = Decrement
+				t.Type = Decrement
 				t.value = "--"
 				l.move()
 			}
 		case '/':
-			t.Kind = Div
+			t.Type = Div
 		case '*':
-			t.Kind = Times
+			t.Type = Times
 		case '%':
-			t.Kind = Mod
+			t.Type = Mod
 		case '&':
-			t.Kind = BitAnd
+			t.Type = BitAnd
 		case '|':
-			t.Kind = BitOr
+			t.Type = BitOr
 		case '^':
-			t.Kind = BitXor
+			t.Type = BitXor
 		case '~':
-			t.Kind = BitNot
+			t.Type = BitNot
 		}
 		return t
 	}
@@ -225,13 +225,13 @@ func (l *Lexer) consumableBoolOperator() Token {
 
 	switch c {
 	case '&':
-		t.Kind = And
+		t.Type = And
 		t.value = string(And)
 	case '|':
-		t.Kind = Or
+		t.Type = Or
 		t.value = string(Or)
 	case '!':
-		t.Kind = Not
+		t.Type = Not
 		t.value = string(Not)
 	}
 
@@ -265,26 +265,26 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	switch char {
 	case '<':
 		if hasEquals {
-			t.Kind = LessThanOrEqual
+			t.Type = LessThanOrEqual
 			t.value = "<="
 		} else {
-			t.Kind = LessThan
+			t.Type = LessThan
 			t.value = "<"
 		}
 	case '>':
 		if hasEquals {
-			t.Kind = GreaterThanOrEqual
+			t.Type = GreaterThanOrEqual
 			t.value = ">="
 		} else {
-			t.Kind = GreaterThan
+			t.Type = GreaterThan
 			t.value = ">"
 		}
 	case '=':
 		if hasEquals {
-			t.Kind = Equal
+			t.Type = Equal
 			t.value = "=="
 		} else {
-			t.Kind = Assign
+			t.Type = Assign
 			t.value = "="
 		}
 	}
@@ -301,7 +301,7 @@ func (l *Lexer) recognizeLiteral() Token {
 	}
 
 	if beginsNumber(b) {
-		if t := l.consumeNumber(); t.Kind != Unknown {
+		if t := l.consumeNumber(); t.Type != Unknown {
 			return t
 		}
 		// if it began with a number literal, it is likely a dot
@@ -328,12 +328,12 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 		l.column += len(word)
 	}()
 
-	if t := l.consumableKeyword(word); t.Kind != Unknown {
+	if t := l.consumableKeyword(word); t.Type != Unknown {
 		return t
 	}
 
 	return Token{
-		Kind:   Identifier,
+		Type:   Identifier,
 		value:  word,
 		column: l.column,
 		line:   l.line,
@@ -347,7 +347,7 @@ func (l *Lexer) consumableKeyword(word string) Token {
 	keyword := TokenType(word)
 	if _, ok := keywords[keyword]; ok {
 		return Token{
-			Kind:   keyword,
+			Type:   keyword,
 			value:  word,
 			column: col,
 			line:   line,
@@ -360,7 +360,7 @@ func (l *Lexer) consumableKeyword(word string) Token {
 // consumeDots consumes a dot or dots token
 func (l *Lexer) consumeDots() Token {
 	t := Token{
-		Kind:   Dot,
+		Type:   Dot,
 		value:  string(Dot),
 		line:   l.line,
 		column: l.column,
@@ -369,13 +369,13 @@ func (l *Lexer) consumeDots() Token {
 
 	// check for potential second dot to form two dots
 	if next, _ := l.peek(); isDot(next) {
-		t.Kind = TwoDots
+		t.Type = TwoDots
 		t.value = string(TwoDots)
 		l.move()
 
 		// check for potential third dot to form ellipsis
 		if next, _ = l.peek(); isDot(next) {
-			t.Kind = Ellipsis
+			t.Type = Ellipsis
 			t.value = string(Ellipsis)
 			l.move()
 		}
@@ -417,7 +417,7 @@ func (l *Lexer) consumeRune() Token {
 	t := Token{
 		column: l.column,
 		line:   l.line,
-		Kind:   Rune,
+		Type:   Rune,
 		value:  value.String(),
 	}
 	l.move()
@@ -426,10 +426,10 @@ func (l *Lexer) consumeRune() Token {
 
 func (l *Lexer) consumeString() Token {
 	nextState := &nextStringState
-	kind := String
+	Type := String
 	if l.getCurr() == '`' {
 		nextState = &nextRawStringState
-		kind = RawString
+		Type = RawString
 	}
 	fsm := fsm.New(stringStates, stringStates[0], *nextState)
 
@@ -446,7 +446,7 @@ func (l *Lexer) consumeString() Token {
 	buf.Truncate(length - 2)
 
 	t := Token{
-		Kind:   kind,
+		Type:   Type,
 		column: l.column,
 		line:   l.line,
 		value:  buf.String(),
@@ -460,7 +460,7 @@ func (l *Lexer) consumeString() Token {
 // consumableIdentifier returns an identifier/unknown token which can be consumed
 func (l *Lexer) consumableIdentifier(word string) Token {
 	t := Token{
-		Kind:   Identifier,
+		Type:   Identifier,
 		column: l.column,
 		line:   l.line,
 	}
@@ -486,15 +486,15 @@ func (l *Lexer) consumeNumber() Token {
 	}
 
 	// check for a decimal/exponent to determine whether Int or Float
-	var kind TokenType = Int
+	var Type TokenType = Int
 	for _, b := range num {
 		if b == '.' || b == 'e' || b == 'E' {
-			kind = Float
+			Type = Float
 		}
 	}
 
 	t := Token{
-		Kind:   kind,
+		Type:   Type,
 		column: l.column,
 		line:   l.line,
 		value:  num,

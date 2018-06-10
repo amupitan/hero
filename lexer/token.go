@@ -7,7 +7,7 @@ import (
 type TokenType string
 
 type Token struct {
-	Kind         TokenType
+	Type         TokenType
 	value        string
 	line, column int
 }
@@ -133,5 +133,5 @@ var (
 )
 
 func (t Token) String() string {
-	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.value, t.Kind, t.line, t.column)
+	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.value, t.Type, t.line, t.column)
 }
