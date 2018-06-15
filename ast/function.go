@@ -7,8 +7,7 @@ type funcBody struct{}
 type param core.Expression
 
 type Function struct {
-	core.Definition
-	name        string
+	Definition
 	parameters  []core.Expression // TODO(DEV) use para,
 	returnTypes []interface{}
 	body        funcBody
@@ -17,5 +16,5 @@ type Function struct {
 }
 
 func (f *Function) String() string {
-	return `func ` + f.name + core.StringifyExpressions(f.parameters)
+	return `func ` + f.Name + core.StringifyExpressions(f.parameters)
 }
