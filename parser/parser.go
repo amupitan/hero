@@ -19,6 +19,15 @@ var precedence = map[lx.TokenType]int{
 	lx.Times: 20, lx.Div: 20, lx.Mod: 20,
 }
 
+var literals = []lx.TokenType{
+	lx.Int,
+	lx.Float,
+	lx.String,
+	lx.RawString,
+	lx.Rune,
+	lx.Underscore,
+}
+
 type parser func(p *Parser) core.Expression
 
 type Parser struct {
@@ -88,7 +97,7 @@ func (p *Parser) parse_statement() core.Statement {
 	t := p.peek()
 	switch t.Type {
 	case lx.Var:
-		// TODO
+		return p.attempt_parse_definition()
 	}
 	return &ast.Function{}
 }
@@ -97,7 +106,8 @@ func (p *Parser) parse_expression() core.Expression {
 	return p.parse_binary(p.parse_atom(), nil)
 }
 
-func (p *Parser) parse_call() *ast.Call {
+// attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
+func (p *Parser) attempt_parse_call() *ast.Call {
 	identifier := p.expect(lx.Identifier)
 	params := p.delimeted(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
 	if params == nil {
@@ -110,6 +120,55 @@ func (p *Parser) parse_call() *ast.Call {
 	return &ast.Call{
 		Name: identifier.Value,
 		Args: []core.Expression(params),
+	}
+}
+
+// attempt_parse_definition attempts to parse a definition or returns nil if it can't be parsed
+func (p *Parser) attempt_parse_definition() *ast.Definition {
+	var name, Type string
+	var value core.Expression
+	if p.accept(lx.Var) {
+		// consume var keyword
+		p.next()
+
+		// consume identifier name
+		name = p.expect(lx.Identifier).Value
+
+		// check if type is present
+		if p.accept(lx.Identifier) {
+			Type = p.next().Value
+		}
+
+		// consume assigment sign
+		p.expect(lx.Assign)
+
+		// get value
+		value = p.parse_atom()
+	} else if p.accept(lx.Func) {
+		// TODO: parse func
+	} else if p.accept(lx.Identifier) {
+		if lookahead := p.lookahead(); lookahead != nil && lookahead.Type == lx.Declare {
+			// cosume identifier as name
+			name = p.next().Value
+			// get value
+			value = p.parse_atom()
+
+		}
+
+		// return nil if a definition cannot be parsed
+		return nil
+	} else {
+		// panic if token is invalid
+		//
+		//TODO(IMPROV) use a fucntion that will
+		// straight up panic instead of an unnecessary loop
+		p.expectsOneOf(lx.Var, lx.Identifier, lx.Func)
+	}
+
+	return &ast.Definition{
+		Name:  name,
+		Value: value,
+		Type:  Type,
 	}
 }
 
@@ -134,11 +193,12 @@ func (p *Parser) parse_atom() core.Expression {
 
 	// check if it is a call
 	if t.Type == lx.Identifier {
-		if e := p.parse_call(); e != nil {
+		if e := p.attempt_parse_call(); e != nil {
 			return e
 		}
 	}
 
+	// TODO: allow functions
 	return &ast.Atom{
 		Type:  t.Type,
 		Value: t.Value,

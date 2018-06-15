@@ -8,20 +8,20 @@ import (
 // 			Declaration
 // 	    	/          \
 //         /            \
-//     Definition(Exp)  =Class
+//     Definition  =Class
 //          /    \
 //         /      \
-//    =Variable    =Function
+//    =Variable    =Function    ==== expressuion
 //
 
 type Definition struct {
-	core.Expression
+	// core.Expression TODO(??) should definitions be expressions?
 	core.Declaration
-	Binary
 	Name  string
 	Value core.Expression
+	Type  string
 }
 
 func (d *Definition) String() string {
-	return `var ` + d.Name + ` = ` + d.Value.String()
+	return `var ` + d.Name + ` ` + d.Type + ` = ` + d.Value.String()
 }

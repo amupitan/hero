@@ -1,6 +1,3 @@
 package core
 
-type Statement interface {
-	isDefinition() bool
-	isExpression() bool
-}
+type Statement interface{}

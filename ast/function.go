@@ -7,6 +7,7 @@ type funcBody struct{}
 type param core.Expression
 
 type Function struct {
+	core.Expression
 	Definition
 	parameters  []core.Expression // TODO(DEV) use para,
 	returnTypes []interface{}
