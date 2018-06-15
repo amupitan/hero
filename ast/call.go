@@ -10,5 +10,5 @@ type Call struct {
 }
 
 func (c *Call) String() string {
-	return ``
+	return c.Name + `(` + core.StringifyExpressions(c.Args) + `)`
 }

@@ -3,10 +3,10 @@ package ast
 import "github.com/amupitan/hero/ast/core"
 
 type Block struct {
-	core.Expression
+	core.Statement
 	expressions []core.Expression
 }
 
 func (b *Block) String() string {
-	return ``
+	return `{ ` + core.StringifyExpressions(b.expressions) + `}`
 }

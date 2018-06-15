@@ -8,5 +8,5 @@ type Program struct {
 }
 
 func (p *Program) String() string {
-	return ``
+	return `program`
 }

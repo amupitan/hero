@@ -4,12 +4,12 @@ import "github.com/amupitan/hero/ast/core"
 
 type funcBody struct{}
 
-type Param core.Expression
+type param core.Expression
 
 type Function struct {
 	core.Definition
 	name        string
-	parameters  []Param
+	parameters  []core.Expression // TODO(DEV) use para,
 	returnTypes []interface{}
 	body        funcBody
 	owner       interface{}
@@ -17,5 +17,5 @@ type Function struct {
 }
 
 func (f *Function) String() string {
-	return ``
+	return `func ` + f.name + core.StringifyExpressions(f.parameters)
 }
