@@ -33,6 +33,7 @@ const (
 	If        TokenType = "if"
 	Interface TokenType = "interface"
 	Import    TokenType = "import"
+	New_      TokenType = "new"
 	Null      TokenType = "null"
 	Package   TokenType = "package"
 	Return    TokenType = "return"
@@ -62,6 +63,7 @@ const (
 	LessThan           TokenType = "<"
 	LessThanOrEqual    TokenType = "<="
 	Equal              TokenType = "=="
+	NotEqual           TokenType = "!=" // TODO  parse not equal
 
 	/// Boolean operators
 	And TokenType = "&&"
@@ -119,6 +121,7 @@ var keywords = map[TokenType]struct{}{
 	If:        struct{}{},
 	Interface: struct{}{},
 	Import:    struct{}{},
+	New_:      struct{}{},
 	Null:      struct{}{},
 	Package:   struct{}{},
 	Return:    struct{}{},
