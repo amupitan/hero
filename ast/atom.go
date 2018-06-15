@@ -5,9 +5,8 @@ import (
 	"github.com/amupitan/hero/lexer"
 )
 
-type Assignment struct {
+type Atom struct {
 	core.Expression
-	Identifier lexer.Token
-	operator   lexer.Token
-	Value      core.Expression
+	Type  lexer.TokenType
+	Value string
 }

@@ -1,7 +1,7 @@
 package core
 
 type Definition struct {
-	Node
+	Statement
 }
 
 func (d *Definition) isDefinition() bool { return true }

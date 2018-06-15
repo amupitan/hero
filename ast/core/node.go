@@ -1,6 +1,3 @@
 package core
 
-type Node interface {
-	isDefinition() bool
-	isExpression() bool
-}
+type Node interface{}

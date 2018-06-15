@@ -1,9 +1,5 @@
 package core
 
-type Expression struct {
-	Node
+type Expression interface {
+	Statement
 }
-
-func (e *Expression) isDefinition() bool { return false }
-
-func (e *Expression) isExpression() bool { return true }

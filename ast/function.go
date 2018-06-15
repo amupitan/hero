@@ -4,10 +4,7 @@ import "github.com/amupitan/hero/ast/core"
 
 type funcBody struct{}
 
-type Param struct {
-	Type  interface{}
-	value interface{}
-}
+type Param core.Expression
 
 type Function struct {
 	core.Definition

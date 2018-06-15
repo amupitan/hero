@@ -4,7 +4,7 @@ import "github.com/amupitan/hero/ast/core"
 
 type Call struct {
 	core.Expression
-	name   string
-	args   []Param
+	Name   string // TODO: take in complete token?
+	Args   []core.Expression
 	object interface{}
 }
