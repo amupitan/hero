@@ -19,7 +19,7 @@ type Definition struct {
 	core.Declaration
 	Name  string
 	Value core.Expression
-	Type  string
+	Type  string // TODO use lexer or custom ast type for type
 }
 
 func (d *Definition) String() string {

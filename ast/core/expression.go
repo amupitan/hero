@@ -4,8 +4,6 @@ import "strings"
 
 type Expression interface {
 	Statement
-	// string value for debugging purposes
-	String() string
 }
 
 func StringifyExpressions(exps []Expression) string {

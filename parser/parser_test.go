@@ -1,12 +1,17 @@
 package parser
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
 	lx "github.com/amupitan/hero/lexer"
 )
+
+func expressionEqual(exp1, exp2 core.Expression) bool {
+	return exp1.String() == exp2.String()
+}
 
 func TestParser_parse_expression(t *testing.T) {
 	tests := []struct {
@@ -60,6 +65,47 @@ func TestParser_parse_expression(t *testing.T) {
 	}
 }
 
-func expressionEqual(exp1, exp2 core.Expression) bool {
-	return exp1.String() == exp2.String()
+func TestParser_parse_statement(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  core.Statement // if want is nil, a panic is expected
+	}{
+		{
+			"variable declaration with type and value",
+			"var foo int = 0",
+			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+		},
+		{
+			`variable declaration with value`,
+			`var bar = "hello"`,
+			&ast.Definition{Name: `bar`, Value: &ast.Atom{Value: `hello`, Type: lx.String}},
+		},
+		{
+			`variable declaration with type`,
+			`var foobar int`,
+			&ast.Definition{Name: `foobar`, Type: `int`},
+		},
+		{
+			`variable declaration with no type or value`,
+			`var x`,
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			defer func() {
+				if r := recover(); tt.want == nil && r != nil {
+					// TODO compare panic message
+					t.Logf("Got expected panic of: %s", r.(error).Error())
+				} else if tt.want != nil && r != nil {
+					t.Errorf("Unexpected panic: %s", r.(error).Error())
+				}
+			}()
+			if got := p.parse_statement(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_statement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

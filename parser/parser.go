@@ -90,7 +90,7 @@ func (p *Parser) parse_toplevel() core.Statement {
 	for t := p.peek(); t != nil && t.Type != lx.Unknown; {
 		statements = append(statements, p.parse_statement())
 	}
-	return ast.Program{Statements: statements}
+	return &ast.Program{Statements: statements}
 }
 
 func (p *Parser) parse_statement() core.Statement {
@@ -98,6 +98,11 @@ func (p *Parser) parse_statement() core.Statement {
 	switch t.Type {
 	case lx.Var:
 		return p.attempt_parse_definition()
+	case lx.Return:
+	case lx.If:
+	case lx.For:
+		//TODO
+
 	}
 	return &ast.Function{}
 }
@@ -119,7 +124,7 @@ func (p *Parser) attempt_parse_call() *ast.Call {
 	// TODO: convert expression to call.params?
 	return &ast.Call{
 		Name: identifier.Value,
-		Args: []core.Expression(params),
+		Args: params,
 	}
 }
 
@@ -137,13 +142,21 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 		// check if type is present
 		if p.accept(lx.Identifier) {
 			Type = p.next().Value
+
+			// consume value if assign token is present
+			if p.accept(lx.Assign) {
+				p.next()
+				// get value
+				value = p.parse_atom()
+			}
+		} else {
+			// if type isn't present, then there must be a value
+			// cosume assigment token
+			p.expect(lx.Assign)
+
+			value = p.parse_atom()
 		}
 
-		// consume assigment sign
-		p.expect(lx.Assign)
-
-		// get value
-		value = p.parse_atom()
 	} else if p.accept(lx.Func) {
 		// TODO: parse func
 	} else if p.accept(lx.Identifier) {
