@@ -62,6 +62,9 @@ func (l *Lexer) Tokenize() ([]Token, error) {
 		tokens = append(tokens, token)
 	}
 
+	// add EndOfInput token
+	tokens = append(tokens, token)
+
 	if token.Type == Unknown {
 		return nil, fmt.Errorf(UnknownTokenError, token.Value, token.Line, token.Column)
 	}

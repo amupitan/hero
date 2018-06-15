@@ -35,10 +35,8 @@ func New(input string) *Parser {
 	p := &Parser{
 		Lexer: lx.New(input),
 	}
-	p.current = p.NextToken()
 
 	p.tokens, p.err = p.Tokenize()
-
 	return p
 }
 
@@ -102,6 +100,8 @@ func (p *Parser) parse_expression() core.Expression {
 		if e := p.parse_call(); e != nil {
 			return e
 		}
+		return p.parse_binary(p.parse_atom(), nil) // TODO(CLEAN) replace with fallthrough
+	case lx.Int:
 		return p.parse_binary(p.parse_atom(), nil)
 	}
 	return &ast.Function{}
@@ -291,19 +291,19 @@ func (p *Parser) expectsOneOf(expected ...lx.TokenType) *lx.Token {
 
 // skipNewLines skips all new Line tokens till the next non-new Line token or the end
 func (p *Parser) skipNewLines() {
-	for p.current.Type == lx.NewLine {
-		p.current = p.NextToken()
+	for p.peek().Type == lx.NewLine {
+		p.next()
 	}
 }
 
 func (p *Parser) reportEndOfInput(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
-	return fmt.Errorf("%d:%d: Expected %s but reached end of file.", p.Lexer.Line, p.Lexer.Column, expected)
+	return fmt.Errorf("%d:%d: Expected %v but reached end of file.", p.Lexer.Line, p.Lexer.Column, expected)
 }
 
 func (p *Parser) reportUnexpected(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
-	return fmt.Errorf("%d:%d: Expected %s but found %s.", p.Lexer.Line, p.Lexer.Column, expected, p.current.Value)
+	return fmt.Errorf("%d:%d: Expected %v but found %s.", p.Lexer.Line, p.Lexer.Column, expected, p.peek().Value)
 }
 
 func (p *Parser) reportUnexpectedMultiple(expected ...lx.TokenType) error {
