@@ -91,6 +91,11 @@ func TestParser_parse_statement(t *testing.T) {
 			`var x`,
 			nil,
 		},
+		{
+			`invalid declaration`,
+			`var (invalid)`,
+			nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -98,7 +103,6 @@ func TestParser_parse_statement(t *testing.T) {
 			defer func() {
 				if r := recover(); tt.want == nil && r != nil {
 					// TODO compare panic message
-					t.Logf("Got expected panic of: %s", r.(error).Error())
 				} else if tt.want != nil && r != nil {
 					t.Errorf("Unexpected panic: %s", r.(error).Error())
 				}

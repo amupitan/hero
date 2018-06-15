@@ -163,9 +163,9 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 		if lookahead := p.lookahead(); lookahead != nil && lookahead.Type == lx.Declare {
 			// cosume identifier as name
 			name = p.next().Value
+
 			// get value
 			value = p.parse_atom()
-
 		}
 
 		// return nil if a definition cannot be parsed
@@ -173,7 +173,7 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 	} else {
 		// panic if token is invalid
 		//
-		//TODO(IMPROV) use a fucntion that will
+		//TODO(IMPROV) use a function that will
 		// straight up panic instead of an unnecessary loop
 		p.expectsOneOf(lx.Var, lx.Identifier, lx.Func)
 	}
@@ -369,12 +369,12 @@ func (p *Parser) skipNewLines() {
 
 func (p *Parser) reportEndOfInput(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
-	return fmt.Errorf("%d:%d: Expected %v but reached end of file.", p.Lexer.Line, p.Lexer.Column, expected)
+	return fmt.Errorf("%d:%d: Expected `%s` but reached end of file.", p.Lexer.Line, p.Lexer.Column, *expected)
 }
 
 func (p *Parser) reportUnexpected(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
-	return fmt.Errorf("%d:%d: Expected %v but found %s.", p.Lexer.Line, p.Lexer.Column, expected, p.peek().Value)
+	return fmt.Errorf("%d:%d: Expected `%v` but found `%s`.", p.Lexer.Line, p.Lexer.Column, *expected, p.peek().Value)
 }
 
 func (p *Parser) reportUnexpectedMultiple(expected ...lx.TokenType) error {
