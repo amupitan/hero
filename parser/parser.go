@@ -94,16 +94,6 @@ func (p *Parser) parse_statement() core.Statement {
 }
 
 func (p *Parser) parse_expression() core.Expression {
-	t := p.peek()
-	switch t.Type {
-	case lx.Identifier:
-		if e := p.parse_call(); e != nil {
-			return e
-		}
-		return p.parse_binary(p.parse_atom(), nil) // TODO(CLEAN) replace with fallthrough
-	case lx.Int:
-		return p.parse_binary(p.parse_atom(), nil)
-	}
 	return p.parse_binary(p.parse_atom(), nil)
 }
 
@@ -134,12 +124,20 @@ func (p *Parser) parse_atom() core.Expression {
 		p.expect(lx.RightParenthesis)
 		return exp
 	}
+
 	t := p.expectsOneOf(lx.Identifier,
 		lx.Int, lx.Float,
 		lx.String,
 		lx.RawString,
 		lx.Rune,
 		lx.Underscore)
+
+	// check if it is a call
+	if t.Type == lx.Identifier {
+		if e := p.parse_call(); e != nil {
+			return e
+		}
+	}
 
 	return &ast.Atom{
 		Type:  t.Type,
