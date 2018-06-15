@@ -6,3 +6,7 @@ type Block struct {
 	core.Expression
 	expressions []core.Expression
 }
+
+func (b *Block) String() string {
+	return ``
+}

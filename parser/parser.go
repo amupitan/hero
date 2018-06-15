@@ -104,7 +104,7 @@ func (p *Parser) parse_expression() core.Expression {
 	case lx.Int:
 		return p.parse_binary(p.parse_atom(), nil)
 	}
-	return &ast.Function{}
+	return p.parse_binary(p.parse_atom(), nil)
 }
 
 func (p *Parser) parse_call() *ast.Call {
@@ -171,7 +171,7 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 	op := p.next()
 
 	right := p.parse_binary(p.parse_atom(), &(op.Type))
-	b := ast.Binary{
+	b := &ast.Binary{
 		Left:     left,
 		Operator: *op,
 		Right:    right,

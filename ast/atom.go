@@ -10,3 +10,7 @@ type Atom struct {
 	Type  lexer.TokenType
 	Value string
 }
+
+func (a *Atom) String() string {
+	return a.Value
+}

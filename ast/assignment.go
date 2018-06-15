@@ -11,3 +11,7 @@ type Assignment struct {
 	operator   lexer.Token
 	Value      core.Expression
 }
+
+func (a *Assignment) String() string {
+	return ``
+}

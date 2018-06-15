@@ -15,3 +15,7 @@ type Function struct {
 	owner       interface{}
 	private     bool
 }
+
+func (f *Function) String() string {
+	return ``
+}

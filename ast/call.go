@@ -8,3 +8,7 @@ type Call struct {
 	Args   []core.Expression
 	object interface{}
 }
+
+func (c *Call) String() string {
+	return ``
+}

@@ -11,3 +11,7 @@ type Binary struct {
 	Right    core.Expression
 	Operator lexer.Token
 }
+
+func (b *Binary) String() string {
+	return `(` + b.Left.String() + b.Operator.Value + b.Right.String() + `)`
+}
