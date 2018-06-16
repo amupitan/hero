@@ -2,12 +2,14 @@ package ast
 
 import (
 	"github.com/amupitan/hero/ast/core"
-	"github.com/amupitan/hero/lexer"
 )
 
 type Assignment struct {
-	Binary
-	Identifier lexer.Token
-	operator   lexer.Token
+	core.Expression
+	Identifier string
 	Value      core.Expression
+}
+
+func (a *Assignment) String() string {
+	return a.Identifier + `=` + a.Value.String()
 }

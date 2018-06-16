@@ -11,6 +11,7 @@ import (
 )
 
 func expressionEqual(exp1, exp2 core.Expression) bool {
+	// TODO(DEV) add Equals(expression) to core.Exp and use it here
 	return exp1.String() == exp2.String()
 }
 
@@ -33,15 +34,6 @@ func TestParser_parse_expression(t *testing.T) {
 		want  core.Expression
 	}{
 		{
-			name:  "integer addition",
-			input: "1+2",
-			want: &ast.Binary{
-				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
-				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
-				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
-			},
-		},
-		{
 			name:  "integer addition and multiplication",
 			input: "1+2*3",
 			want: &ast.Binary{
@@ -49,7 +41,7 @@ func TestParser_parse_expression(t *testing.T) {
 				Operator: lx.Token{Value: `+`, Type: lx.Plus},
 				Right: &ast.Binary{
 					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
-					Operator: lx.Token{Value: `*`, Type: lx.Plus},
+					Operator: lx.Token{Value: `*`, Type: lx.Times},
 					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
 				},
 			},
@@ -63,7 +55,7 @@ func TestParser_parse_expression(t *testing.T) {
 					Operator: lx.Token{Value: `+`, Type: lx.Plus},
 					Right:    &ast.Atom{Value: `2`, Type: lx.Int},
 				},
-				Operator: lx.Token{Value: `*`, Type: lx.Plus},
+				Operator: lx.Token{Value: `*`, Type: lx.Times},
 				Right:    &ast.Atom{Value: `3`, Type: lx.Int},
 			},
 		},
@@ -154,6 +146,86 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 			defer expectPanic(t, tt.want)
 			if got := p.attempt_parse_definition(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_definition() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_parse_binary(t *testing.T) {
+	type fields struct {
+		input string
+		curr  int
+	}
+	type args struct {
+		left  core.Expression
+		my_op *lx.TokenType
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   core.Expression
+	}{
+		{
+			name:   "integer addition",
+			fields: fields{"1+2", 1},
+			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: nil},
+			want: &ast.Binary{
+				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
+				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+			},
+		},
+		{
+			name:   "integer addition and multiplication",
+			fields: fields{"1+2*3", 1},
+			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: nil},
+			want: &ast.Binary{
+				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus},
+				Right: &ast.Binary{
+					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
+					Operator: lx.Token{Value: `*`, Type: lx.Plus},
+					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:   "integer assignment",
+			fields: fields{"a = 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value:      &ast.Atom{Value: `4`, Type: lx.Int},
+			},
+		},
+		{
+			name:   "invalid double assignment",
+			fields: fields{"a = 2 = 7", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want:   nil,
+		},
+		{
+			name:   "addition assignment",
+			fields: fields{"a = 2 + .7", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Binary{
+					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
+					Operator: lx.Token{Value: `+`, Type: lx.Plus},
+					Right:    &ast.Atom{Value: `.7`, Type: lx.Float},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.fields.input)
+			p.curr = tt.fields.curr
+			defer expectPanic(t, tt.want)
+			if got := p.parse_binary(tt.args.left, tt.args.my_op); !expressionEqual(got, tt.want) {
+				t.Errorf("Parser.parse_binary() = %v, want %v", got, tt.want)
 			}
 		})
 	}

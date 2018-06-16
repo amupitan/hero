@@ -252,7 +252,13 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 		Right:    right,
 	}
 
-	return p.parse_binary(b, my_op)
+	e := p.parse_binary(b, my_op)
+
+	if op.Type == lx.Assign {
+		return p.parse_assignment(e)
+	}
+
+	return e
 }
 
 func (p *Parser) delimited(start, stop, separator lx.TokenType, expr_parser parser) []core.Expression {
@@ -292,18 +298,16 @@ func (p *Parser) delimited(start, stop, separator lx.TokenType, expr_parser pars
 	return params
 }
 
-func (p *Parser) parse_assignment() core.Expression {
-	identifier := p.expect(lx.Identifier)
-
-	// expect and ignore assignment token
-	p.expect(lx.Assign)
-
-	value := p.parse_expression()
-	return &ast.Assignment{
-		Identifier: *identifier,
-		Value:      value,
+func (p *Parser) parse_assignment(e core.Expression) core.Expression {
+	// TODO(DEV) check that b.Left is an identifier
+	if b, ok := e.(*ast.Binary); ok {
+		return &ast.Assignment{
+			Identifier: b.Left.String(),
+			Value:      b.Right,
+		}
 	}
-
+	// TODO(DEV) find a better way to take care of invalid states
+	panic(errors.New(`Cannot assign variable to an assignment`))
 }
 
 func (p *Parser) expect(expected lx.TokenType) *lx.Token {
