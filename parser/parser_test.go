@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -11,6 +12,18 @@ import (
 
 func expressionEqual(exp1, exp2 core.Expression) bool {
 	return exp1.String() == exp2.String()
+}
+
+func expectPanic(t *testing.T, want interface{}) {
+	// strings are used here because a nil comparison
+	// can't be used
+	// see: https://golang.org/doc/faq#nil_error
+	null, wantStr := fmt.Sprint(nil), fmt.Sprint(want)
+	if r := recover(); wantStr == null && r != nil {
+		// TODO(TEST) compare panic message
+	} else if wantStr != null && r != nil {
+		t.Errorf("Unexpected panic: %s", r.(error).Error())
+	}
 }
 
 func TestParser_parse_expression(t *testing.T) {
@@ -72,8 +85,36 @@ func TestParser_parse_statement(t *testing.T) {
 		want  core.Statement // if want is nil, a panic is expected
 	}{
 		{
-			"variable declaration with type and value",
+			"variable declaration with type and value", // TODO(TEST) change test
 			"var foo int = 0",
+			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+		},
+		{
+			`variable declaration with no type or value`, // TODO(TEST) change test
+			`var x`,
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			defer expectPanic(t, tt.want)
+			if got := p.parse_statement(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_statement() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_attempt_parse_definition(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  *ast.Definition
+	}{
+		{
+			`variable declaration with type and value`,
+			`var foo int = 0`,
 			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
 		},
 		{
@@ -100,15 +141,9 @@ func TestParser_parse_statement(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
-			defer func() {
-				if r := recover(); tt.want == nil && r != nil {
-					// TODO compare panic message
-				} else if tt.want != nil && r != nil {
-					t.Errorf("Unexpected panic: %s", r.(error).Error())
-				}
-			}()
-			if got := p.parse_statement(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Parser.parse_statement() = %v, want %v", got, tt.want)
+			defer expectPanic(t, tt.want)
+			if got := p.attempt_parse_definition(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.attempt_parse_definition() = %v, want %v", got, tt.want)
 			}
 		})
 	}
