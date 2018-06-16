@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
@@ -382,9 +383,9 @@ func (p *Parser) reportUnexpectedMultiple(expected ...lx.TokenType) error {
 	sb := bytes.Buffer{}
 
 	// Add line and column info
-	sb.WriteRune(rune(p.Lexer.Line)) // TODO(DEV) this or rune-int calculation
+	sb.WriteString(strconv.Itoa(p.Lexer.Line)) // TODO(DEV) this or rune-int calculation
 	sb.WriteRune(':')
-	sb.WriteRune(rune(p.Lexer.Column))
+	sb.WriteString(strconv.Itoa(p.Lexer.Column)) // TODO(DEV) this or rune-int calculation
 	sb.WriteString(": Expected either ")
 	for _, ex := range expected {
 		sb.WriteString(string(ex))
@@ -394,7 +395,7 @@ func (p *Parser) reportUnexpectedMultiple(expected ...lx.TokenType) error {
 	// remove last comma and space
 	sb.Truncate(sb.Len() - 2)
 
-	sb.WriteString("but received ")
+	sb.WriteString(" but received ")
 	if curr := p.peek(); curr != nil {
 		sb.WriteString(curr.Value)
 	} else {
