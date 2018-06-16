@@ -252,7 +252,7 @@ func (l *Lexer) consumeComparisonOperator() Token {
 	hasEquals := false
 
 	if l.position+1 < len(l.input) {
-		// copy next byte
+		// copy next rune
 		cpy := l.input[l.position+1]
 
 		// move cursor to accommodate '='
@@ -412,7 +412,7 @@ func (l *Lexer) consumeRune() Token {
 		return t
 	}
 
-	value.WriteByte(c)
+	value.WriteRune(c)
 
 	t := Token{
 		Column: l.Column,
@@ -466,7 +466,7 @@ func (l *Lexer) consumableIdentifier(word string) Token {
 	}
 
 	for _, c := range word {
-		if !isValidIdentifierChar(byte(c)) {
+		if !isValidIdentifierChar(rune(c)) {
 			break
 		}
 	}

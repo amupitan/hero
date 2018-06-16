@@ -7,7 +7,7 @@ import (
 
 // Lexer performs lexical analysis on an input
 type Lexer struct {
-	input                  []byte
+	input                  []rune
 	position, Line, Column int
 }
 
@@ -15,7 +15,7 @@ const UnknownTokenError = `Unexpected token '%s' on line %d, column %d.`
 
 func New(input string) *Lexer {
 	return &Lexer{
-		input:  []byte(input),
+		input:  []rune(input),
 		Line:   1,
 		Column: 1,
 	}
@@ -72,8 +72,8 @@ func (l *Lexer) Tokenize() ([]Token, error) {
 	return tokens, nil
 }
 
-// getCurr returns the byte at the current position
-func (l *Lexer) getCurr() byte {
+// getCurr returns the rune at the current position
+func (l *Lexer) getCurr() rune {
 	return l.input[l.position]
 }
 
@@ -85,10 +85,10 @@ func (l *Lexer) move() {
 
 // getNextWord reads all the chracters till the next white space
 // and returns the consumed characters
-func (l *Lexer) getNextWord(isAllowed func(b byte) bool) string {
+func (l *Lexer) getNextWord(isAllowed func(b rune) bool) string {
 	var word bytes.Buffer
 	if isAllowed == nil {
-		isAllowed = func(b byte) bool { return true }
+		isAllowed = func(b rune) bool { return true }
 	}
 
 	var i int
@@ -97,7 +97,7 @@ func (l *Lexer) getNextWord(isAllowed func(b byte) bool) string {
 		if isWhitespace(b) || !isAllowed(b) { //TODO: only spaces & tabs should count as whitespace
 			break
 		}
-		word.WriteByte(b)
+		word.WriteRune(b)
 	}
 
 	return word.String()
@@ -123,16 +123,16 @@ func (l *Lexer) retract() {
 	}
 }
 
-// peek returns the byte at cursor and true if found,
+// peek returns the rune at cursor and true if found,
 // else it returns 0 and false
-func (l *Lexer) peek() (byte, bool) {
+func (l *Lexer) peek() (rune, bool) {
 	if l.position < len(l.input) {
 		return l.input[l.position], true
 	}
 	return 0, false
 }
 
-// skipWhiteSpace skips all white spaces till the next non-space or newline byte
+// skipWhiteSpace skips all white spaces till the next non-space or newline rune
 func (l *Lexer) skipWhiteSpace() {
 	for c, ok := l.peek(); ok && isWhitespace(c); c, ok = l.peek() {
 		l.position++

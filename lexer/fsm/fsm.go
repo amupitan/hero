@@ -2,7 +2,7 @@ package fsm
 
 import "bytes"
 
-type Transition func(current State, input byte) State
+type Transition func(current State, input rune) State
 
 type State struct {
 	Value   int
@@ -32,7 +32,7 @@ func New(states []State, initial State, getNextState Transition) *FSM {
 }
 
 /// Run returns a value and whether a valid value was found
-func (f *FSM) Run(input []byte) (*bytes.Buffer, bool) {
+func (f *FSM) Run(input []rune) (*bytes.Buffer, bool) {
 	currentState := &f.initial
 
 	var output bytes.Buffer
@@ -45,7 +45,7 @@ func (f *FSM) Run(input []byte) (*bytes.Buffer, bool) {
 			break
 		}
 
-		output.WriteByte(b)
+		output.WriteRune(b)
 		currentState = &nextState
 	}
 

@@ -41,7 +41,7 @@ var stringStates = []fsm.State{
 	EndStringState,
 }
 
-func nextNumberState(currentState fsm.State, input byte) fsm.State {
+func nextNumberState(currentState fsm.State, input rune) fsm.State {
 	switch currentState.Value {
 	case InitialState.Value:
 		if isDigit(input) {
@@ -90,8 +90,8 @@ func nextNumberState(currentState fsm.State, input byte) fsm.State {
 	return NullState
 }
 
-func nextStringStateGenerator(delimeter byte) fsm.Transition {
-	return func(currentState fsm.State, input byte) fsm.State {
+func nextStringStateGenerator(delimeter rune) fsm.Transition {
+	return func(currentState fsm.State, input rune) fsm.State {
 		switch currentState {
 		case InitialState:
 			if input == delimeter {
@@ -111,36 +111,36 @@ var nextStringState = nextStringStateGenerator('"')
 
 var nextRawStringState = nextStringStateGenerator('`')
 
-func isLetter(b byte) bool              { return unicode.IsLetter(rune(b)) }
-func isDigit(b byte) bool               { return unicode.IsDigit(rune(b)) }
-func isDot(b byte) bool                 { return b == '.' }
-func isColon(b byte) bool               { return b == ':' }
-func isValidIdentifierChar(b byte) bool { return b == '_' || isLetter(b) || isDigit(b) }
-func isBoolOperator(b byte) bool        { return b == '&' || b == '|' || b == '!' }
-func isComparisonOperator(b byte) bool  { return b == '>' || b == '<' || b == '=' }
-func isWhitespace(b byte) bool          { return b == ' ' || b == '\t' }
-func isNewLine(b byte) bool             { return b == '\n' }
-func beginsNumber(b byte) bool          { return b == '.' || isDigit(b) }
-func beginsBitShift(b byte) bool        { return b == '<' || b == '>' }
-func beginsString(b byte) bool          { return b == '"' || b == '`' }
-func beginsRune(b byte) bool            { return b == '\'' }
-func beginsIdentifier(b byte) bool      { return b == '_' || isLetter(b) }
+func isLetter(b rune) bool              { return unicode.IsLetter(rune(b)) }
+func isDigit(b rune) bool               { return unicode.IsDigit(rune(b)) }
+func isDot(b rune) bool                 { return b == '.' }
+func isColon(b rune) bool               { return b == ':' }
+func isValidIdentifierChar(b rune) bool { return b == '_' || isLetter(b) || isDigit(b) }
+func isBoolOperator(b rune) bool        { return b == '&' || b == '|' || b == '!' }
+func isComparisonOperator(b rune) bool  { return b == '>' || b == '<' || b == '=' }
+func isWhitespace(b rune) bool          { return b == ' ' || b == '\t' }
+func isNewLine(b rune) bool             { return b == '\n' }
+func beginsNumber(b rune) bool          { return b == '.' || isDigit(b) }
+func beginsBitShift(b rune) bool        { return b == '<' || b == '>' }
+func beginsString(b rune) bool          { return b == '"' || b == '`' }
+func beginsRune(b rune) bool            { return b == '\'' }
+func beginsIdentifier(b rune) bool      { return b == '_' || isLetter(b) }
 
-func isDelimeter(b byte) bool {
+func isDelimeter(b rune) bool {
 	return b == ',' || b == '(' || b == ')' || b == '[' || b == ']' || b == '{' || b == '}'
 }
 
-func beginsLiteral(b byte) bool {
+func beginsLiteral(b rune) bool {
 	return beginsString(b) || beginsIdentifier(b) || beginsRune(b) || beginsNumber(b)
 }
 
-func isBitOperator(b byte) bool {
+func isBitOperator(b rune) bool {
 	return b == '&' || b == '|' || b == '~' || b == '^'
 }
 
-func isOperator(b byte) bool {
+func isOperator(b rune) bool {
 	return isArithmeticOperator(b) || isComparisonOperator(b) || isBoolOperator(b) || isBitOperator(b)
 }
-func isArithmeticOperator(b byte) bool {
+func isArithmeticOperator(b rune) bool {
 	return b == '+' || b == '-' || b == '*' || b == '/' || b == '%'
 }
