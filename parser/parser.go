@@ -94,6 +94,7 @@ func (p *Parser) parse_toplevel() core.Statement {
 	return &ast.Program{Statements: statements}
 }
 
+// parse_statement parses a statement. It can parse any statement
 func (p *Parser) parse_statement() core.Statement {
 	t := p.peek()
 	switch t.Type {
@@ -108,6 +109,7 @@ func (p *Parser) parse_statement() core.Statement {
 	return p.parse_expression()
 }
 
+// parse_expression can parse any expression
 func (p *Parser) parse_expression() core.Expression {
 	return p.parse_binary(p.parse_atom(), nil)
 }
@@ -189,6 +191,7 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 	}
 }
 
+// parse_atom parses out an atom - which is a literal value or identifier
 func (p *Parser) parse_atom() core.Expression {
 	// attempt to consume expression in a parenthesis
 	if p.accept(lx.LeftParenthesis) {
@@ -222,6 +225,7 @@ func (p *Parser) parse_atom() core.Expression {
 	}
 }
 
+// parse_binary parses a binary expression
 func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Expression {
 	var (
 		prec int
@@ -261,6 +265,9 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 	return e
 }
 
+// delimited parses the content with a [start] and a [stop] token using the [separator]
+// as a delimeter and [expr_parser] to parse the content. [end_sep] flags whether a separator is
+// allowed at the end
 func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, expr_parser parser) []core.Expression {
 	if !p.accept(start) {
 		return nil
@@ -307,6 +314,7 @@ func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, ex
 	return params
 }
 
+// parse_assignment parses an assigment expression
 func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 	// TODO(DEV) check that b.Left is an identifier
 	if b, ok := e.(*ast.Binary); ok {
@@ -319,6 +327,8 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 	panic(errors.New(`Cannot assign variable to an assignment`))
 }
 
+// expect returns a toekn if the [expected] toekn type is the next token
+// otherwise it panics
 func (p *Parser) expect(expected lx.TokenType) *lx.Token {
 	if expected != lx.NewLine {
 		p.skipNewLines()
@@ -384,16 +394,21 @@ func (p *Parser) skipNewLines() {
 	}
 }
 
+// reports an error of reaching the end of the input will expecting
+// another token
 func (p *Parser) reportEndOfInput(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
 	return fmt.Errorf("%d:%d: Expected `%s` but reached end of file.", p.Lexer.Line, p.Lexer.Column, *expected)
 }
 
+// reportUnexpected returns an error of receiving a wrong token type
 func (p *Parser) reportUnexpected(expected *lx.TokenType) error {
 	// TODO(DEV) add file name
 	return fmt.Errorf("%d:%d: Expected `%v` but found `%s`.", p.Lexer.Line, p.Lexer.Column, *expected, p.peek().Value)
 }
 
+// reportUnexpectedMultiple returns an error for expecting one of a set of
+// tokens
 func (p *Parser) reportUnexpectedMultiple(expected ...lx.TokenType) error {
 	// TODO(DEV) add file name
 	sb := bytes.Buffer{}
