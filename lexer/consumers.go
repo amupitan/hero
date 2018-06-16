@@ -332,8 +332,13 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 		return t
 	}
 
+	Type := Identifier
+	if word == `_` {
+		Type = Underscore
+	}
+
 	return Token{
-		Type:   Identifier,
+		Type:   Type,
 		Value:  word,
 		Column: l.Column,
 		Line:   l.Line,
