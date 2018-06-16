@@ -115,7 +115,7 @@ func (p *Parser) parse_expression() core.Expression {
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
 func (p *Parser) attempt_parse_call() *ast.Call {
 	identifier := p.expect(lx.Identifier)
-	params := p.delimeted(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
+	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
 	if params == nil {
 		// if parse was unsuccessful, retract and return
 		p.unstep()
@@ -255,7 +255,7 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 	return p.parse_binary(b, my_op)
 }
 
-func (p *Parser) delimeted(start, stop, separator lx.TokenType, expr_parser parser) []core.Expression {
+func (p *Parser) delimited(start, stop, separator lx.TokenType, expr_parser parser) []core.Expression {
 	if !p.accept(start) {
 		return nil
 	}
