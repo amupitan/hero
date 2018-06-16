@@ -230,3 +230,138 @@ func TestParser_parse_binary(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_attempt_parse_call(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        *ast.Call
+		shouldPanic bool
+	}{
+		{
+			name:  `call with no args`,
+			input: `print()`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{},
+			},
+		},
+		{
+			name:  `call with one arg`,
+			input: `print(1)`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}},
+			},
+		},
+		{
+			name:  `call with two args`,
+			input: `print(1, "hello")`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+			},
+		},
+		{
+			name:        `call with extra separator at the end`,
+			input:       `print(1, 2,)`,
+			want:        nil,
+			shouldPanic: true,
+		},
+		{
+			name:        `call with extra separator at the end`,
+			input:       `print(1, 2,)`,
+			want:        nil,
+			shouldPanic: true,
+		},
+		{
+			name:  `invalid call - no parenthesis`,
+			input: `print{1, "hello"}`,
+			want:  nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.attempt_parse_call(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.attempt_parse_call() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_delimited(t *testing.T) {
+	test_parser := func(p *Parser) core.Expression { return p.parse_expression() }
+	type args struct {
+		start       lx.TokenType
+		stop        lx.TokenType
+		separator   lx.TokenType
+		end_sep     bool
+		expr_parser parser
+	}
+	tests := []struct {
+		name        string
+		input       string
+		args        args
+		want        []core.Expression
+		shouldPanic bool
+	}{
+		{
+			name:  `empty braces`,
+			input: `{}`,
+			args:  args{lx.LeftBrace, lx.RightBrace, lx.Comma, false, test_parser},
+			want:  []core.Expression{},
+		},
+		{
+			name:  `one arg in bracket`,
+			input: `[1]`,
+			args:  args{lx.LeftBracket, lx.RightBracket, lx.Comma, false, test_parser},
+			want:  []core.Expression{&ast.Atom{Type: `int`, Value: `1`}},
+		},
+		{
+			name:  `two args in parenthesis`,
+			input: `(1, "boom!")`,
+			args:  args{lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, test_parser},
+			want:  []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `boom!`}},
+		},
+		{
+			name:        `unexpected seperator at the end`,
+			input:       `[1,]`,
+			args:        args{lx.LeftBracket, lx.RightBracket, lx.Comma, false, test_parser},
+			want:        nil,
+			shouldPanic: true,
+		},
+		{
+			name:  `expected seperator at the end`,
+			input: `[1,]`,
+			args:  args{lx.LeftBracket, lx.RightBracket, lx.Comma, true, test_parser},
+			want:  []core.Expression{&ast.Atom{Type: `int`, Value: `1`}},
+		},
+		{
+			name:  `numbers in braces`,
+			input: `{1,2,3}`,
+			args:  args{lx.LeftBrace, lx.RightBrace, lx.Comma, true, test_parser},
+			want:  []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `int`, Value: `2`}, &ast.Atom{Type: `int`, Value: `3`}},
+		},
+		{
+			name:  `numbers in braces with separator at end`,
+			input: `{1,2,3,}`,
+			args:  args{lx.LeftBrace, lx.RightBrace, lx.Comma, true, test_parser},
+			want:  []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `int`, Value: `2`}, &ast.Atom{Type: `int`, Value: `3`}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.delimited(tt.args.start, tt.args.stop, tt.args.separator, tt.args.end_sep, tt.args.expr_parser); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.delimited() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -105,7 +105,7 @@ func (p *Parser) parse_statement() core.Statement {
 		//TODO
 
 	}
-	return &ast.Function{}
+	return p.parse_expression()
 }
 
 func (p *Parser) parse_expression() core.Expression {
@@ -115,7 +115,7 @@ func (p *Parser) parse_expression() core.Expression {
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
 func (p *Parser) attempt_parse_call() *ast.Call {
 	identifier := p.expect(lx.Identifier)
-	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
+	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
 	if params == nil {
 		// if parse was unsuccessful, retract and return
 		p.unstep()
@@ -261,7 +261,7 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 	return e
 }
 
-func (p *Parser) delimited(start, stop, separator lx.TokenType, expr_parser parser) []core.Expression {
+func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, expr_parser parser) []core.Expression {
 	if !p.accept(start) {
 		return nil
 	}
@@ -275,24 +275,33 @@ func (p *Parser) delimited(start, stop, separator lx.TokenType, expr_parser pars
 		return []core.Expression{}
 	}
 
-	params := make([]core.Expression, 0, 10) // TODO(CLEAN) we assume delimted content is usually < 10
+	params := make([]core.Expression, 0, 10) // TODO(CLEAN) we assume delimted content is usually ≤ 10
 
 	// consume first expression before the delimeter
 	params = append(params, expr_parser(p))
 
 	// check for more content
 	for {
-		// consume separator
-		p.expect(separator)
-
-		// consume expression
-		params = append(params, expr_parser(p))
 
 		// consume and break when we see the stop token
 		if p.accept(stop) {
 			p.next()
 			break
 		}
+
+		// consume separator
+		p.expect(separator)
+
+		if end_sep {
+			// consume and break when we see the stop token
+			if p.accept(stop) {
+				p.next()
+				break
+			}
+		}
+
+		// consume expression
+		params = append(params, expr_parser(p))
 	}
 
 	return params
