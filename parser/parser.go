@@ -204,19 +204,19 @@ func (p *Parser) parse_atom() core.Expression {
 		return exp
 	}
 
+	// check if it is a call
+	if p.accept(lx.Identifier) {
+		if e := p.attempt_parse_call(); e != nil {
+			return e
+		}
+	}
+
 	t := p.expectsOneOf(lx.Identifier,
 		lx.Int, lx.Float,
 		lx.String,
 		lx.RawString,
 		lx.Rune,
 		lx.Underscore)
-
-	// check if it is a call
-	if t.Type == lx.Identifier {
-		if e := p.attempt_parse_call(); e != nil {
-			return e
-		}
-	}
 
 	// TODO: allow functions
 	return &ast.Atom{

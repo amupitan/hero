@@ -365,3 +365,62 @@ func TestParser_delimited(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_parse_atom(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        core.Expression
+		shouldPanic bool
+	}{
+		{
+			name:  `integer`,
+			input: `1`,
+			want:  &ast.Atom{Value: `1`, Type: lx.Int},
+		},
+		{
+			name:  `exponent float`,
+			input: `1.2E-7`,
+			want:  &ast.Atom{Value: `1.2E-7`, Type: lx.Float},
+		},
+		{
+			name:  `raw string`,
+			input: "`hello world`",
+			want:  &ast.Atom{Value: `hello world`, Type: lx.RawString},
+		},
+		{
+			name:  `rune`,
+			input: `'爱'`,
+			want:  &ast.Atom{Value: `爱`, Type: lx.Rune},
+		},
+		{
+			name:  `underscore`,
+			input: `_`,
+			want:  &ast.Atom{Value: `_`, Type: lx.Underscore},
+		},
+		{
+			name:  `single identifier`,
+			input: `foo`,
+			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier},
+		},
+		{
+			name:  `call with two args`,
+			input: `print(1, "hello")`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.parse_atom(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_atom() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
