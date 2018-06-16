@@ -12,5 +12,8 @@ type Atom struct {
 }
 
 func (a *Atom) String() string {
+	if a.Type == lexer.RawString {
+		return `r'` + a.Value
+	}
 	return a.Value
 }
