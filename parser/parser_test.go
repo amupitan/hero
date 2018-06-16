@@ -137,6 +137,16 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 			`var (invalid)`,
 			nil,
 		},
+		{
+			`short variable declaration with type and value`,
+			`foo := 0`,
+			&ast.Definition{Name: `foo`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+		},
+		{
+			`short variable declaration with invalid syntax`,
+			`foo 0`,
+			nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

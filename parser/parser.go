@@ -162,15 +162,18 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 		// TODO: parse func
 	} else if p.accept(lx.Identifier) {
 		if lookahead := p.lookahead(); lookahead != nil && lookahead.Type == lx.Declare {
-			// cosume identifier as name
+			// consume identifier as name
 			name = p.next().Value
+
+			// consume operator
+			p.next()
 
 			// get value
 			value = p.parse_atom()
+		} else {
+			// return nil if a definition cannot be parsed
+			return nil
 		}
-
-		// return nil if a definition cannot be parsed
-		return nil
 	} else {
 		// panic if token is invalid
 		//
