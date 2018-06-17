@@ -116,7 +116,15 @@ func (p *Parser) parse_expression() core.Expression {
 
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
 func (p *Parser) attempt_parse_call() *ast.Call {
+	object := ``
 	identifier := p.expect(lx.Identifier)
+	if p.accept(lx.Dot) {
+		// consume dot
+		p.next()
+
+		object = identifier.Value
+		identifier = p.expect(lx.Identifier)
+	}
 	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
 	if params == nil {
 		// if parse was unsuccessful, retract and return
@@ -126,8 +134,9 @@ func (p *Parser) attempt_parse_call() *ast.Call {
 
 	// TODO: convert expression to call.params?
 	return &ast.Call{
-		Name: identifier.Value,
-		Args: params,
+		Name:   identifier.Value,
+		Args:   params,
+		Object: object,
 	}
 }
 

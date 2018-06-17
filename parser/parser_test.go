@@ -404,11 +404,12 @@ func TestParser_parse_atom(t *testing.T) {
 			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier},
 		},
 		{
-			name:  `call with two args`,
-			input: `print(1, "hello")`,
+			name:  `call object method with two args`,
+			input: `foo.print(1, "hello")`,
 			want: &ast.Call{
-				Name: `print`,
-				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+				Name:   `print`,
+				Args:   []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+				Object: `foo`,
 			},
 		},
 	}

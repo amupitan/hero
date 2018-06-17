@@ -6,9 +6,13 @@ type Call struct {
 	core.Expression
 	Name   string // TODO: take in complete token?
 	Args   []core.Expression
-	object interface{}
+	Object string
 }
 
 func (c *Call) String() string {
-	return c.Name + `(` + core.StringifyExpressions(c.Args) + `)`
+	s := c.Name + `(` + core.StringifyExpressions(c.Args) + `)`
+	if c.Object != `` {
+		s = c.Object + `.` + s
+	}
+	return s
 }
