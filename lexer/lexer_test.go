@@ -21,7 +21,7 @@ func TestNew(t *testing.T) {
 		{
 			"create lexer",
 			args{"this is code"},
-			&Lexer{[]byte("this is code"), 0, 1, 1},
+			&Lexer{[]rune("this is code"), 0, 1, 1},
 		},
 	}
 
@@ -37,7 +37,7 @@ func TestNew(t *testing.T) {
 func Test_nextState(t *testing.T) {
 	type args struct {
 		currentState fsm.State
-		input        byte
+		input        rune
 	}
 	tests := []struct {
 		name string
@@ -116,30 +116,30 @@ func Test_nextState(t *testing.T) {
 
 func TestLexer_getCurr(t *testing.T) {
 	type fields struct {
-		input    []byte
+		input    []rune
 		position int
 		Line     int
 		Column   int
 	}
-	input := []byte("1 + 2")
+	input := []rune("1 + 2")
 	randIdx := rand.Int() % len(input)
 	tests := []struct {
 		name   string
 		fields fields
-		want   byte
+		want   rune
 	}{
 		{
-			"get first byte",
+			"get first rune",
 			fields{input, 0, 0, 0},
 			input[0],
 		},
 		{
-			"get random byte",
+			"get random rune",
 			fields{input, randIdx, 0, 0},
 			input[randIdx],
 		},
 		{
-			"get last valid byte",
+			"get last valid rune",
 			fields{input, len(input) - 1, 0, 0},
 			input[len(input)-1],
 		},
@@ -161,7 +161,7 @@ func TestLexer_getCurr(t *testing.T) {
 
 func TestLexer_move(t *testing.T) {
 	type fields struct {
-		input    []byte
+		input    []rune
 		position int
 		Line     int
 		Column   int
@@ -173,8 +173,8 @@ func TestLexer_move(t *testing.T) {
 	}{
 		{
 			"only position and Column are updated after calling move",
-			fields{[]byte("test"), 1, 1, 1},
-			&Lexer{[]byte("test"), 2, 1, 2},
+			fields{[]rune("test"), 1, 1, 1},
+			&Lexer{[]rune("test"), 2, 1, 2},
 		},
 	}
 	for _, tt := range tests {
@@ -195,7 +195,7 @@ func TestLexer_move(t *testing.T) {
 
 func TestLexer_consumeParenthesis(t *testing.T) {
 	type fields struct {
-		input    []byte
+		input    []rune
 		position int
 		Line     int
 		Column   int
@@ -207,12 +207,12 @@ func TestLexer_consumeParenthesis(t *testing.T) {
 	}{
 		{
 			"Comsume left parenthesis",
-			fields{[]byte("(hello)"), 0, 1, 1},
+			fields{[]rune("(hello)"), 0, 1, 1},
 			Token{LeftParenthesis, "(", 1, 1},
 		},
 		{
 			"Comsume right parenthesis",
-			fields{[]byte("(hello)"), 6, 1, 6},
+			fields{[]rune("(hello)"), 6, 1, 6},
 			Token{RightParenthesis, ")", 1, 6},
 		},
 	}
@@ -233,7 +233,7 @@ func TestLexer_consumeParenthesis(t *testing.T) {
 
 func TestLexer_skipWhiteSpace(t *testing.T) {
 	type fields struct {
-		input    []byte
+		input    []rune
 		position int
 		Line     int
 		Column   int
@@ -245,18 +245,18 @@ func TestLexer_skipWhiteSpace(t *testing.T) {
 	}{
 		{
 			"space between characters on first Line",
-			fields{[]byte("a = 3"), 1, 1, 2},
-			&Lexer{[]byte("a = 3"), 2, 1, 3},
+			fields{[]rune("a = 3"), 1, 1, 2},
+			&Lexer{[]rune("a = 3"), 2, 1, 3},
 		},
 		{
 			"space between characters on another Line",
-			fields{[]byte("a = 3\nw * 3"), 7, 2, 2},
-			&Lexer{[]byte("a = 3\nw * 3"), 8, 2, 3},
+			fields{[]rune("a = 3\nw * 3"), 7, 2, 2},
+			&Lexer{[]rune("a = 3\nw * 3"), 8, 2, 3},
 		},
 		{
 			"expressions between lines",
-			fields{[]byte("a = 3\nw * 3"), 5, 1, 5},
-			&Lexer{[]byte("a = 3\nw * 3"), 5, 1, 5},
+			fields{[]rune("a = 3\nw * 3"), 5, 1, 5},
+			&Lexer{[]rune("a = 3\nw * 3"), 5, 1, 5},
 		},
 	}
 	for _, tt := range tests {
@@ -506,7 +506,7 @@ func TestLexer_Tokenize(t *testing.T) {
 
 func TestLexer_skipComments(t *testing.T) {
 	type fields struct {
-		input    []byte
+		input    []rune
 		position int
 		Line     int
 		Column   int
@@ -518,28 +518,28 @@ func TestLexer_skipComments(t *testing.T) {
 	}{
 		{
 			"last Line with comment",
-			fields{[]byte("a += 3 // this adds 3"), 7, 1, 8},
-			&Lexer{[]byte("a += 3 // this adds 3"), 21, 1, 22},
+			fields{[]rune("a += 3 // this adds 3"), 7, 1, 8},
+			&Lexer{[]rune("a += 3 // this adds 3"), 21, 1, 22},
 		},
 		{
 			"Line with comment",
-			fields{[]byte("a += 3 // this adds 3\nb = 3"), 7, 1, 8},
-			&Lexer{[]byte("a += 3 // this adds 3\nb = 3"), 21, 1, 22},
+			fields{[]rune("a += 3 // this adds 3\nb = 3"), 7, 1, 8},
+			&Lexer{[]rune("a += 3 // this adds 3\nb = 3"), 21, 1, 22},
 		},
 		{
 			"Line with empty comment",
-			fields{[]byte("a += 3 //\nb = 3"), 7, 1, 8},
-			&Lexer{[]byte("a += 3 //\nb = 3"), 9, 1, 10},
+			fields{[]rune("a += 3 //\nb = 3"), 7, 1, 8},
+			&Lexer{[]rune("a += 3 //\nb = 3"), 9, 1, 10},
 		},
 		{
 			"space between characters on another Line",
-			fields{[]byte("a /= 3\nw * 3"), 2, 1, 3},
-			&Lexer{[]byte("a /= 3\nw * 3"), 2, 1, 3},
+			fields{[]rune("a /= 3\nw * 3"), 2, 1, 3},
+			&Lexer{[]rune("a /= 3\nw * 3"), 2, 1, 3},
 		},
 		{
 			"expressions between lines",
-			fields{[]byte("a = 3\nw * 3"), 5, 1, 6},
-			&Lexer{[]byte("a = 3\nw * 3"), 5, 1, 6},
+			fields{[]rune("a = 3\nw * 3"), 5, 1, 6},
+			&Lexer{[]rune("a = 3\nw * 3"), 5, 1, 6},
 		},
 	}
 	for _, tt := range tests {
