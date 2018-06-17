@@ -1,45 +1,46 @@
 package types
 
+type verify func(value string) bool
+
 type builtin struct {
 	name string
+	verify
 }
 
 func (b builtin) String() string {
 	return b.name
 }
 
-type Int struct{ builtin }
-
-func (i Int) IsType(value string) bool {
-	return true
+func (b builtin) IsType(value string) bool {
+	return b.verify(value)
 }
 
-type Float struct{ builtin }
-
-func (f Float) IsType(value string) bool {
-	return true
+var Int = &builtin{
+	name:   `int`,
+	verify: func(value string) bool { return true },
 }
 
-type String struct{ builtin }
-
-func (s String) IsType(value string) bool {
-	return true
+var Float = &builtin{
+	name:   `float`,
+	verify: func(value string) bool { return true },
 }
 
-type Rune struct{ builtin }
-
-func (r Rune) IsType(value string) bool {
-	return true
+var String = &builtin{
+	name:   `string`,
+	verify: func(value string) bool { return true },
 }
 
-type Bool struct{ builtin }
-
-func (b Bool) IsType(value string) bool {
-	return true
+var Rune = &builtin{
+	name:   `rune`,
+	verify: func(value string) bool { return true },
 }
 
-type Generic struct{ builtin }
+var Bool = &builtin{
+	name:   `bool`,
+	verify: func(value string) bool { return true },
+}
 
-func (g Generic) IsType(value string) bool {
-	return true
+var Generic = &builtin{
+	name:   `generic`,
+	verify: func(value string) bool { return true },
 }
