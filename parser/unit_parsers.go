@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"errors"
-
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
 	lx "github.com/amupitan/hero/lexer"
@@ -82,14 +80,14 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 			if p.accept(lx.Assign) {
 				p.next()
 				// get value
-				value = p.parse_atom()
+				value = p.parse_binary(p.parse_atom(), nil)
 			}
 		} else {
 			// if type isn't present, then there must be a value
 			// cosume assigment token
 			p.expect(lx.Assign)
 
-			value = p.parse_atom()
+			value = p.parse_binary(p.parse_atom(), nil)
 		}
 
 	} else if p.accept(lx.Func) {
@@ -103,7 +101,7 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 			p.next()
 
 			// get value
-			value = p.parse_atom()
+			value = p.parse_binary(p.parse_atom(), nil)
 		} else {
 			// return nil if a definition cannot be parsed
 			return nil
@@ -207,5 +205,8 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 		}
 	}
 	// TODO(DEV) find a better way to take care of invalid states
-	panic(errors.New(`Cannot assign variable to an assignment`))
+	report(`Cannot assign variable to an assignment`)
+
+	// report panics so this will never be hit
+	return nil
 }
