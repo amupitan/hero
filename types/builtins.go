@@ -37,3 +37,9 @@ type Bool struct{ builtin }
 func (b Bool) IsType(value string) bool {
 	return true
 }
+
+type Generic struct{ builtin }
+
+func (g Generic) IsType(value string) bool {
+	return true
+}
