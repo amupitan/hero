@@ -4,6 +4,7 @@ import (
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
 	lx "github.com/amupitan/hero/lexer"
+	"github.com/amupitan/hero/types"
 )
 
 // parse_toplevel parses out the body of the program
@@ -24,8 +25,14 @@ func (p *Parser) parse_statement() core.Statement {
 	case lx.Return:
 	case lx.If:
 	case lx.For:
+	case lx.LeftBrace:
 		//TODO
 
+	}
+
+	// attempt to parse short definition
+	if d := p.attempt_parse_definition(); d != nil {
+		return d
 	}
 	return p.parse_expression()
 }
@@ -84,7 +91,7 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 			}
 		} else {
 			// if type isn't present, then there must be a value
-			// cosume assigment token
+			// consume assignment token
 			p.expect(lx.Assign)
 
 			value = p.parse_binary(p.parse_atom(), nil)
@@ -209,4 +216,171 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 
 	// report panics so this will never be hit
 	return nil
+}
+
+// parse_block parses a block surrounded by braces
+func (p *Parser) parse_block() []core.Statement {
+	// consume left brace
+	p.expect(lx.LeftBrace)
+
+	// return an empty slice if there are no statements
+	if p.accept(lx.RightBrace) {
+		p.next()
+		return []core.Statement{}
+	}
+
+	// we assume blocks are usually <= 20 statements
+	statements := make([]core.Statement, 0, 20)
+	for !p.accept(lx.RightBrace) {
+		statements = append(statements, p.parse_statement())
+		// TODO(DEV) expect semi-colon or new line? Consider one-liners
+	}
+
+	// consume right brace
+	p.next()
+
+	return statements
+}
+
+// parse_func parses a function
+func (p *Parser) parse_func(lamdba bool) *ast.Function {
+
+	var name string
+	// consume func
+	p.expect(lx.Func)
+
+	// consume function name if not lambda
+	if !lamdba {
+		name = p.expect(lx.Identifier).Value
+	}
+
+	// get function parameters
+	params := p.parse_func_params()
+
+	// we assume most functions have returns ≤ 5
+	returns := make([]types.Type, 0, 5)
+
+	getType := func(identifier string) types.Type {
+		// check if type is a builtin else
+		// create custom type
+		if _type, ok := builtins[identifier]; ok {
+			return _type
+		}
+		return CustomType(identifier)
+	}
+
+	// get return types
+	//
+	// has one return type
+	if p.accept(lx.Identifier) {
+		_type := getType(p.next().Value)
+		returns = append(returns, _type)
+	} else if p.accept(lx.LeftParenthesis) {
+		rets := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression {
+			t := p.expect(lx.Identifier)
+			return &ast.Value{Value: t.Value}
+		})
+
+		// add parsed return types
+		for i := range rets {
+			name := rets[i].(*ast.Value).Value
+			returns = append(returns, getType(name))
+		}
+	}
+
+	// parse function body
+	body := p.parse_block()
+
+	return &ast.Function{
+		Definition: ast.Definition{
+			Name: name,
+			Type: types.Func.String(), // TODO(DEV) remove String() caller
+		},
+		Parameters:  params,
+		Body:        body,
+		ReturnTypes: returns,
+		Lambda:      lamdba,
+	}
+}
+
+// parse_func_params parses the parameters from a function
+func (p *Parser) parse_func_params() []*ast.Param {
+
+	// consume left paren
+	p.expect(lx.LeftParenthesis)
+
+	// if there is nothing between the parenthesis,
+	// return an empty slice
+	if p.accept(lx.RightParenthesis) {
+		p.next()
+		return []*ast.Param{}
+	}
+
+	// we assume most functions have params ≤ 10
+	params := make([]*ast.Param, 0, 10)
+
+	// buffer to store identifier names till their
+	// type has been identified
+	buff := make([]string, 0, 5)
+
+	for {
+		// get next parameter name
+		identifier := p.expect(lx.Identifier).Value
+
+		// add parameter name to buffer
+		buff = append(buff, identifier)
+
+		// if type is founf
+		if p.accept(lx.Identifier) {
+			var (
+				_type types.Type
+				ok    bool
+			)
+			// get type name
+			typeName := p.next().Value
+
+			// check if type is a builtin else
+			// create custom type
+			if _type, ok = builtins[typeName]; !ok {
+				_type = CustomType(typeName)
+			}
+
+			// create a param from everything in the buffer
+			// and assign the type that was found to each of those
+			// params created
+			for i := range buff {
+				param := &ast.Param{Name: buff[i], Type: _type}
+				params = append(params, param)
+			}
+
+			// empty the buffer
+			buff = buff[:0]
+
+			// check for comma separator or end parenthesis
+			next := p.expectsOneOf(lx.Comma, lx.RightParenthesis)
+			if next.Type == lx.Comma {
+				continue
+			}
+
+			if next.Type == lx.RightParenthesis {
+				break
+			}
+		}
+
+		// check for comma separator
+		if p.accept(lx.Comma) {
+			p.next()
+			continue
+		}
+
+		// panic for type not found
+		//
+		// if it got here then there is something in the
+		// buffer that hasn't been added to the params because
+		// no typename was found
+		p.expect(lx.Identifier)
+	}
+
+	return params
+
 }

@@ -3,7 +3,21 @@ package parser
 import (
 	"github.com/amupitan/hero/ast/core"
 	lx "github.com/amupitan/hero/lexer"
+	"github.com/amupitan/hero/types"
 )
+
+type parser func(p *Parser) core.Expression
+
+type Parser struct {
+	// deprecated
+	*lx.Lexer
+	current lx.Token
+	curr    int
+	tokens  []lx.Token
+	err     error
+}
+
+type CustomType string
 
 var precedence = map[lx.TokenType]int{
 	lx.Assign:   1,
@@ -23,15 +37,14 @@ var literals = []lx.TokenType{
 	lx.Underscore,
 }
 
-type parser func(p *Parser) core.Expression
-
-type Parser struct {
-	// deprecated
-	*lx.Lexer
-	current lx.Token
-	curr    int
-	tokens  []lx.Token
-	err     error
+var builtins = map[string]types.Type{
+	`bool`:    types.Bool,
+	`float`:   types.Float,
+	`func`:    types.Func,
+	`generic`: types.Generic,
+	`int`:     types.Int,
+	`rune`:    types.Rune,
+	`string`:  types.String,
 }
 
 // New returns a new parser
@@ -193,4 +206,12 @@ func (p *Parser) skipNewLines() {
 	for p.peek().Type == lx.NewLine {
 		p.next()
 	}
+}
+
+func (c CustomType) IsType(value string) bool {
+	return true
+}
+
+func (c CustomType) String() string {
+	return string(c)
 }
