@@ -100,50 +100,65 @@ func TestParser_parse_statement(t *testing.T) {
 
 func TestParser_attempt_parse_definition(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
-		want  *ast.Definition
+		name        string
+		input       string
+		want        *ast.Definition
+		shouldPanic bool
 	}{
 		{
-			`variable declaration with type and value`,
-			`var foo int = 0`,
-			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			name:  `variable declaration with type and value`,
+			input: `var foo int = 0`,
+			want:  &ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
 		},
 		{
-			`variable declaration with value`,
-			`var bar = "hello"`,
-			&ast.Definition{Name: `bar`, Value: &ast.Atom{Value: `hello`, Type: lx.String}},
+			name:  `variable declaration with value`,
+			input: `var bar = "hello"`,
+			want:  &ast.Definition{Name: `bar`, Value: &ast.Atom{Value: `hello`, Type: lx.String}},
 		},
 		{
-			`variable declaration with type`,
-			`var foobar int`,
-			&ast.Definition{Name: `foobar`, Type: `int`},
+			name:  `variable declaration with type`,
+			input: `var foobar int`,
+			want:  &ast.Definition{Name: `foobar`, Type: `int`},
 		},
 		{
-			`variable declaration with no type or value`,
-			`var x`,
-			nil,
+			name:        `variable declaration with no type or value`,
+			input:       `var x`,
+			want:        nil,
+			shouldPanic: true,
 		},
 		{
-			`invalid declaration`,
-			`var (invalid)`,
-			nil,
+			name:        `invalid declaration`,
+			input:       `var (invalid)`,
+			want:        nil,
+			shouldPanic: true,
 		},
 		{
-			`short variable declaration with type and value`,
-			`foo := 0`,
-			&ast.Definition{Name: `foo`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			name:  `short variable declaration with type and value`,
+			input: `foo := 0`,
+			want:  &ast.Definition{Name: `foo`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
 		},
 		{
-			`short variable declaration with invalid syntax`,
-			`foo 0`,
-			nil,
+			name:  `short variable declaration to expression with type and value`,
+			input: `x := y + 2`,
+			want: &ast.Definition{Name: `x`, Value: &ast.Binary{
+				Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
+				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+			}},
+		},
+		{
+			name:        `short variable declaration with invalid syntax`,
+			input:       `foo 0`,
+			want:        nil,
+			shouldPanic: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
-			defer expectPanic(t, tt.want)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
 			if got := p.attempt_parse_definition(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_definition() = %v, want %v", got, tt.want)
 			}

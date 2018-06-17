@@ -9,6 +9,11 @@ import (
 	lx "github.com/amupitan/hero/lexer"
 )
 
+// report creates an error with message and panics
+func report(message string) {
+	panic(errors.New(message))
+}
+
 // reports an error of reaching the end of the input will expecting
 // another token
 func (p *Parser) reportEndOfInput(expected *lx.TokenType) error {

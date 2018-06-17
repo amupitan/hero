@@ -23,5 +23,9 @@ type Definition struct {
 }
 
 func (d *Definition) String() string {
-	return `var ` + d.Name + ` ` + d.Type + ` = ` + d.Value.String()
+	s := `var ` + d.Name + ` ` + d.Type
+	if d.Value != nil {
+		s += ` = ` + d.Value.String()
+	}
+	return s
 }
