@@ -76,7 +76,7 @@ func TestParser_parse_func(t *testing.T) {
 		},
 		{
 			name:  `2 args, joined type, 2 returns`,
-			input: `func compute(x, y int) (int, MyTpe) {}`,
+			input: `func compute(x, y int) (int, MyType) {}`,
 			want: &ast.Function{
 				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
