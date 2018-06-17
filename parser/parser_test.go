@@ -86,6 +86,15 @@ func TestParser_parse_statement(t *testing.T) {
 			`var x`,
 			nil,
 		},
+		{
+			name:  `short variable declaration to expression with type and value`,
+			input: `x := y + 2`,
+			want: &ast.Definition{Name: `x`, Value: &ast.Binary{
+				Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
+				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+			}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

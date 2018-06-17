@@ -30,10 +30,10 @@ func TestParser_parse_func(t *testing.T) {
 		},
 		{
 			name:  `3 args, multiple typesets, no return`,
-			input: `func hello(x, y int, z string) {}`,
+			input: `func hello(x, y int, z MyType) {}`,
 			want: &ast.Function{
 				Definition:  ast.Definition{Name: `hello`, Type: string(lx.Func)},
-				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}, &ast.Param{Name: `z`, Type: types.String}},
+				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}, &ast.Param{Name: `z`, Type: CustomType(`MyType`)}},
 				ReturnTypes: []types.Type{},
 				Body:        []core.Statement{},
 				Owner:       nil,
@@ -76,11 +76,11 @@ func TestParser_parse_func(t *testing.T) {
 		},
 		{
 			name:  `2 args, joined type, 2 returns`,
-			input: `func compute(x, y int) (int, bool) {}`,
+			input: `func compute(x, y int) (int, MyTpe) {}`,
 			want: &ast.Function{
 				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
-				ReturnTypes: []types.Type{types.Int, types.Bool},
+				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
 				Body:        []core.Statement{},
 				Owner:       nil,
 			},
