@@ -12,10 +12,11 @@ import (
 
 func TestParser_parse_func(t *testing.T) {
 	tests := []struct {
-		name   string
-		input  string
-		want   *ast.Function
-		lambda bool
+		name        string
+		input       string
+		want        *ast.Function
+		lambda      bool
+		shouldPanic bool
 	}{
 		{
 			name:  `2 args, joined type, no return`,
@@ -104,10 +105,49 @@ func TestParser_parse_func(t *testing.T) {
 				Owner: nil,
 			},
 		},
+		{
+			name:  `no args, 1 return`,
+			input: `func isCool() bool {}`,
+			want: &ast.Function{
+				Definition:  ast.Definition{Name: `isCool`, Type: string(lx.Func)},
+				Parameters:  []*ast.Param{},
+				ReturnTypes: []types.Type{types.Bool},
+				Body:        []core.Statement{},
+				Owner:       nil,
+			},
+		},
+		{
+			name:        `no type with 1 arg`,
+			input:       `func bad(x) bool {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `no type with args`,
+			input:       `func bad(x, y) bool {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `extra seperator before type`,
+			input:       `func bad(x, y, int) bool {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `extra seperator after type`,
+			input:       `func bad(x, y int,) bool {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `only separator present`,
+			input:       `func bad(,) bool {}`,
+			shouldPanic: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
 			if got := p.parse_func(tt.lambda); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.parse_func() = %v, want %v", got, tt.want)
 			}
