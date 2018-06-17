@@ -15,8 +15,8 @@ func (b builtin) IsType(value string) bool {
 	return b.verify(value)
 }
 
-var Int = &builtin{
-	name:   `int`,
+var Bool = &builtin{
+	name:   `bool`,
 	verify: func(value string) bool { return true },
 }
 
@@ -25,8 +25,18 @@ var Float = &builtin{
 	verify: func(value string) bool { return true },
 }
 
-var String = &builtin{
-	name:   `string`,
+var Func = &builtin{
+	name:   `func`,
+	verify: func(value string) bool { return true },
+}
+
+var Generic = &builtin{
+	name:   `generic`,
+	verify: func(value string) bool { return true },
+}
+
+var Int = &builtin{
+	name:   `int`,
 	verify: func(value string) bool { return true },
 }
 
@@ -35,12 +45,7 @@ var Rune = &builtin{
 	verify: func(value string) bool { return true },
 }
 
-var Bool = &builtin{
-	name:   `bool`,
-	verify: func(value string) bool { return true },
-}
-
-var Generic = &builtin{
-	name:   `generic`,
+var String = &builtin{
+	name:   `string`,
 	verify: func(value string) bool { return true },
 }

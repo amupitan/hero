@@ -10,7 +10,6 @@ import (
 type funcBody struct{}
 
 type Param struct {
-	core.Node
 	Name string
 	Type types.Type
 }
@@ -18,7 +17,7 @@ type Param struct {
 type Function struct {
 	core.Expression
 	Definition
-	Parameters  []Param // TODO(DEV) use param,
+	Parameters  []*Param // TODO(DEV) use param,
 	Lambda      bool
 	ReturnTypes []types.Type
 	Body        []core.Statement
@@ -39,7 +38,7 @@ func (f *Function) String() string {
 }
 
 // stringify converts a slice of [Param]s to a comma delimeted string
-func stringifyParams(params []Param) string {
+func stringifyParams(params []*Param) string {
 	s := strings.Builder{}
 	for i, param := range params {
 		s.WriteString(param.String())
