@@ -8,6 +8,7 @@ import (
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
 	lx "github.com/amupitan/hero/lexer"
+	"github.com/amupitan/hero/types"
 )
 
 func expressionEqual(exp1, exp2 core.Expression) bool {
@@ -72,22 +73,19 @@ func TestParser_parse_expression(t *testing.T) {
 
 func TestParser_parse_statement(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
-		want  core.Statement // if want is nil, a panic is expected
+		name        string
+		input       string
+		want        core.Statement // if want is nil, a panic is expected
+		shouldPanic bool
 	}{
 		{
-			"variable declaration with type and value", // TODO(TEST) change test
-			"var foo int = 0",
+			`parse var`,
+			`var foo int = 0`,
 			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			false,
 		},
 		{
-			`variable declaration with no type or value`, // TODO(TEST) change test
-			`var x`,
-			nil,
-		},
-		{
-			name:  `short variable declaration to expression with type and value`,
+			name:  `parse definition`,
 			input: `x := y + 2`,
 			want: &ast.Definition{Name: `x`, Value: &ast.Binary{
 				Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
@@ -95,11 +93,36 @@ func TestParser_parse_statement(t *testing.T) {
 				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
 			}},
 		},
+		{
+			name:  "parse expression",
+			input: "1+2*3",
+			want: &ast.Binary{
+				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
+				Right: &ast.Binary{
+					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
+					Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 4},
+					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:  `parse func`,
+			input: `func compute(x, y int) (int, MyType) {}`,
+			want: &ast.Function{
+				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
+				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
+				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
+				Body:        []core.Statement{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
-			defer expectPanic(t, tt.want)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
 			if got := p.parse_statement(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.parse_statement() = %v, want %v", got, tt.want)
 			}
@@ -259,25 +282,9 @@ func TestParser_attempt_parse_call(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       string
-		want        *ast.Call
+		want        core.Expression
 		shouldPanic bool
 	}{
-		{
-			name:  `call with no args`,
-			input: `print()`,
-			want: &ast.Call{
-				Name: `print`,
-				Args: []core.Expression{},
-			},
-		},
-		{
-			name:  `call with one arg`,
-			input: `print(1)`,
-			want: &ast.Call{
-				Name: `print`,
-				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}},
-			},
-		},
 		{
 			name:  `call with two args`,
 			input: `print(1, "hello")`,
@@ -287,21 +294,18 @@ func TestParser_attempt_parse_call(t *testing.T) {
 			},
 		},
 		{
-			name:        `call with extra separator at the end`,
-			input:       `print(1, 2,)`,
-			want:        nil,
-			shouldPanic: true,
-		},
-		{
-			name:        `call with extra separator at the end`,
-			input:       `print(1, 2,)`,
-			want:        nil,
-			shouldPanic: true,
-		},
-		{
-			name:  `invalid call - no parenthesis`,
-			input: `print{1, "hello"}`,
-			want:  nil,
+			name:  `lambda declaration call with 2 args`,
+			input: `func(x, y int) {}(1, z)`,
+			want: &ast.Call{
+				Func: &ast.Function{
+					Definition:  ast.Definition{Type: string(lx.Func)},
+					Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
+					ReturnTypes: []types.Type{},
+					Body:        []core.Statement{},
+					Lambda:      true,
+				},
+				Args: []core.Expression{&ast.Atom{Type: lx.Int, Value: `1`}, &ast.Atom{Type: lx.Identifier, Value: `z`}},
+			},
 		},
 	}
 	for _, tt := range tests {

@@ -26,7 +26,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -37,7 +36,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}, &ast.Param{Name: `z`, Type: CustomType(`MyType`)}},
 				ReturnTypes: []types.Type{},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -48,7 +46,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -59,7 +56,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
 				Body:        []core.Statement{},
-				Owner:       nil,
 				Lambda:      true,
 			},
 			lambda: true,
@@ -72,7 +68,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Bool},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -83,7 +78,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -102,7 +96,6 @@ func TestParser_parse_func(t *testing.T) {
 					},
 				},
 				},
-				Owner: nil,
 			},
 		},
 		{
@@ -113,7 +106,6 @@ func TestParser_parse_func(t *testing.T) {
 				Parameters:  []*ast.Param{},
 				ReturnTypes: []types.Type{types.Bool},
 				Body:        []core.Statement{},
-				Owner:       nil,
 			},
 		},
 		{
@@ -150,6 +142,135 @@ func TestParser_parse_func(t *testing.T) {
 			}
 			if got := p.parse_func(tt.lambda); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.parse_func() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_attempt_parse_lambda_call(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  core.Expression
+	}{
+		{
+			name:  `lambda declaration`,
+			input: `func(x, y int) {}`,
+			want: &ast.Function{
+				Definition:  ast.Definition{Type: string(lx.Func)},
+				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
+				ReturnTypes: []types.Type{},
+				Body:        []core.Statement{},
+				Lambda:      true,
+			},
+		},
+		{
+			name:  `lambda declaration with 2 returns`,
+			input: `func(x, y SomeType) (MyType, bool) {}`,
+			want: &ast.Function{
+				Definition:  ast.Definition{Type: string(lx.Func)},
+				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: CustomType(`SomeType`)}, &ast.Param{Name: `y`, Type: CustomType(`SomeType`)}},
+				ReturnTypes: []types.Type{CustomType(`MyType`), types.Bool},
+				Body:        []core.Statement{},
+				Lambda:      true,
+			},
+		},
+		{
+			name:  `lambda declaration call with no args`,
+			input: `func() {}()`,
+			want: &ast.Call{
+				Func: &ast.Function{
+					Definition:  ast.Definition{Type: string(lx.Func)},
+					Parameters:  []*ast.Param{},
+					ReturnTypes: []types.Type{},
+					Body:        []core.Statement{},
+					Lambda:      true,
+				},
+				Args: []core.Expression{},
+			},
+		},
+		{
+			name:  `lambda declaration call with 2 args`,
+			input: `func(x, y int) {}(1, z)`,
+			want: &ast.Call{
+				Func: &ast.Function{
+					Definition:  ast.Definition{Type: string(lx.Func)},
+					Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
+					ReturnTypes: []types.Type{},
+					Body:        []core.Statement{},
+					Lambda:      true,
+				},
+				Args: []core.Expression{&ast.Atom{Type: lx.Int, Value: `1`}, &ast.Atom{Type: lx.Identifier, Value: `z`}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if got := p.attempt_parse_lambda_call(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.attempt_parse_lambda_call() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_attempt_parse_named_call(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        *ast.Call
+		shouldPanic bool
+	}{
+		{
+			name:  `call with no args`,
+			input: `print()`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{},
+			},
+		},
+		{
+			name:  `call with one arg`,
+			input: `print(1)`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}},
+			},
+		},
+		{
+			name:  `call with two args`,
+			input: `print(1, "hello")`,
+			want: &ast.Call{
+				Name: `print`,
+				Args: []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+			},
+		},
+		{
+			name:        `call with extra separator at the end`,
+			input:       `print(1, 2,)`,
+			want:        nil,
+			shouldPanic: true,
+		},
+		{
+			name:        `call with extra separator at the end`,
+			input:       `print(1, 2,)`,
+			want:        nil,
+			shouldPanic: true,
+		},
+		{
+			name:  `invalid call - no parenthesis`,
+			input: `print{1, "hello"}`,
+			want:  nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.attempt_parse_named_call(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.attempt_parse_named_call() = %v, want %v", got, tt.want)
 			}
 		})
 	}

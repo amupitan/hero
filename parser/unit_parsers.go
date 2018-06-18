@@ -20,12 +20,14 @@ func (p *Parser) parse_toplevel() core.Statement {
 func (p *Parser) parse_statement() core.Statement {
 	t := p.peek()
 	switch t.Type {
+	case lx.For:
+	case lx.Func:
+		return p.parse_func(false)
+	case lx.If:
+	case lx.LeftBrace:
+	case lx.Return:
 	case lx.Var:
 		return p.attempt_parse_definition()
-	case lx.Return:
-	case lx.If:
-	case lx.For:
-	case lx.LeftBrace:
 		//TODO
 
 	}
@@ -43,7 +45,39 @@ func (p *Parser) parse_expression() core.Expression {
 }
 
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
-func (p *Parser) attempt_parse_call() *ast.Call {
+// it parses a lambda function if possible
+func (p *Parser) attempt_parse_call() core.Expression {
+
+	if p.accept(lx.Identifier) {
+		// This can't simply be changed to return p.attempt_parse_named_call()
+		// because p.attempt_parse_named_call() can never return nil since
+		// it has a type. See: https://golang.org/doc/faq#nil_error
+		if c := p.attempt_parse_named_call(); c != nil {
+			return c
+		}
+		return nil
+	}
+	return p.attempt_parse_lambda_call()
+}
+
+// attempt_parse_lambda_call attempts to parse a call
+// from a lambda expression, returns the lambda expression
+// if it is not call or panics if neither is possible
+func (p *Parser) attempt_parse_lambda_call() core.Expression {
+	f := p.parse_func(true)
+	if t := p.peek(); t.Type == lx.LeftParenthesis {
+		return &ast.Call{
+			Args: p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }), //TODO(CLEAN) parser arg
+			Func: f,
+		}
+	}
+
+	return f
+}
+
+// attempt_parse_named_call attempts to parse a call
+// from an identifier
+func (p *Parser) attempt_parse_named_call() *ast.Call {
 	object := ``
 	identifier := p.expect(lx.Identifier)
 	if p.accept(lx.Dot) {
@@ -114,11 +148,8 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 			return nil
 		}
 	} else {
-		// panic if token is invalid
-		//
-		//TODO(IMPROV) use a function that will
-		// straight up panic instead of an unnecessary loop
-		p.expectsOneOf(lx.Var, lx.Identifier, lx.Func)
+		// return nil if a definition cannot be parsed
+		return nil
 	}
 
 	return &ast.Definition{
@@ -141,8 +172,9 @@ func (p *Parser) parse_atom() core.Expression {
 		return exp
 	}
 
-	// check if it is a call
-	if p.accept(lx.Identifier) {
+	// parse call if it is a named call
+	// or lambda call
+	if p.accept(lx.Identifier) || p.accept(lx.Func) {
 		if e := p.attempt_parse_call(); e != nil {
 			return e
 		}

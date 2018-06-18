@@ -34,7 +34,7 @@ func (f *Function) String() string {
 	if len(f.ReturnTypes) > 0 {
 		s += ` (` + stringifyTypes(f.ReturnTypes) + `)`
 	}
-	return s
+	return s + ` {}`
 }
 
 // stringify converts a slice of [Param]s to a comma delimeted string
