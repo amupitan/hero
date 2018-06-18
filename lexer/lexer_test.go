@@ -193,44 +193,6 @@ func TestLexer_move(t *testing.T) {
 	}
 }
 
-func TestLexer_consumeParenthesis(t *testing.T) {
-	type fields struct {
-		input    []rune
-		position int
-		Line     int
-		Column   int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   Token
-	}{
-		{
-			"Comsume left parenthesis",
-			fields{[]rune("(hello)"), 0, 1, 1},
-			Token{LeftParenthesis, "(", 1, 1},
-		},
-		{
-			"Comsume right parenthesis",
-			fields{[]rune("(hello)"), 6, 1, 6},
-			Token{RightParenthesis, ")", 1, 6},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			l := &Lexer{
-				input:    tt.fields.input,
-				position: tt.fields.position,
-				Line:     tt.fields.Line,
-				Column:   tt.fields.Column,
-			}
-			if got := l.consumeDelimeter(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Lexer.consumeParenthesis() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestLexer_skipWhiteSpace(t *testing.T) {
 	type fields struct {
 		input    []rune

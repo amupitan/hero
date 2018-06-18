@@ -231,11 +231,16 @@ func (l *Lexer) consumableBoolOperator() Token {
 		t.Type = Or
 		t.Value = string(Or)
 	case '!':
-		t.Type = Not
-		t.Value = string(Not)
+		if next == '=' {
+			t.Type = NotEqual
+			t.Value = string(NotEqual)
+		} else {
+			t.Type = Not
+			t.Value = string(Not)
+		}
 	}
 
-	if c != '!' {
+	if t.Value != `!` {
 		l.move()
 	}
 	return t
