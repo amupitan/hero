@@ -25,14 +25,13 @@ func (p *Parser) parse_statement() core.Statement {
 		return p.parse_func(false)
 	case lx.If:
 	case lx.LeftBrace:
+		return p.parse_block()
 	case lx.Return:
-	case lx.Var:
-		return p.attempt_parse_definition()
 		//TODO
 
 	}
 
-	// attempt to parse short definition
+	// attempt to parse definition
 	if d := p.attempt_parse_definition(); d != nil {
 		return d
 	}
@@ -80,7 +79,7 @@ func (p *Parser) attempt_parse_lambda_call() core.Expression {
 func (p *Parser) attempt_parse_named_call() *ast.Call {
 	object := ``
 	identifier := p.expect(lx.Identifier)
-	if p.accept(lx.Dot) {
+	if p.nextIs(lx.Dot) {
 		// consume dot
 		p.next()
 
@@ -131,8 +130,6 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 			value = p.parse_binary(p.parse_atom(), nil)
 		}
 
-	} else if p.accept(lx.Func) {
-		// TODO: parse func
 	} else if p.accept(lx.Identifier) {
 		if lookahead := p.lookahead(); lookahead != nil && lookahead.Type == lx.Declare {
 			// consume identifier as name
@@ -251,14 +248,14 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 }
 
 // parse_block parses a block surrounded by braces
-func (p *Parser) parse_block() []core.Statement {
+func (p *Parser) parse_block() *ast.Block {
 	// consume left brace
 	p.expect(lx.LeftBrace)
 
 	// return an empty slice if there are no statements
 	if p.accept(lx.RightBrace) {
 		p.next()
-		return []core.Statement{}
+		return &ast.Block{}
 	}
 
 	// we assume blocks are usually <= 20 statements
@@ -271,7 +268,9 @@ func (p *Parser) parse_block() []core.Statement {
 	// consume right brace
 	p.next()
 
-	return statements
+	return &ast.Block{
+		Statements: statements,
+	}
 }
 
 // parse_func parses a function

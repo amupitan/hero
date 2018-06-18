@@ -96,7 +96,7 @@ func (p *Parser) Parse() *core.Runtime {
 // as a delimeter and [expr_parser] to parse the content. [end_sep] flags whether a separator is
 // allowed at the end
 func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, expr_parser parser) []core.Expression {
-	if !p.accept(start) {
+	if !p.nextIs(start) {
 		return nil
 	}
 
@@ -167,17 +167,16 @@ func (p *Parser) accept(expected lx.TokenType) bool {
 	if expected != lx.NewLine {
 		p.skipNewLines()
 	}
-	t := p.peek()
+	return p.nextIs(expected)
+}
 
-	if expected != lx.EndOfInput && t.Type == lx.EndOfInput {
-		return false
+// nextIs returns true if the [expected] token type matches the next token type
+func (p *Parser) nextIs(expected lx.TokenType) bool {
+	if t := p.peek(); t != nil {
+
+		return t.Type == expected
 	}
-
-	if expected != t.Type {
-		return false
-	}
-
-	return true
+	return false
 }
 
 // acceptsOneOf returns true if one of the expected tokens match

@@ -113,7 +113,20 @@ func TestParser_parse_statement(t *testing.T) {
 				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
+			},
+		},
+		{
+			name:  `parse block`,
+			input: `{x := y + 2}`,
+			want: &ast.Block{
+				Statements: []core.Statement{
+					&ast.Definition{Name: `x`, Value: &ast.Binary{
+						Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
+						Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 9},
+						Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+					}},
+				},
 			},
 		},
 	}
@@ -301,7 +314,7 @@ func TestParser_attempt_parse_call(t *testing.T) {
 					Definition:  ast.Definition{Type: string(lx.Func)},
 					Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 					ReturnTypes: []types.Type{},
-					Body:        []core.Statement{},
+					Body:        &ast.Block{},
 					Lambda:      true,
 				},
 				Args: []core.Expression{&ast.Atom{Type: lx.Int, Value: `1`}, &ast.Atom{Type: lx.Identifier, Value: `z`}},

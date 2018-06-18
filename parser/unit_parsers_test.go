@@ -25,7 +25,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `add`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -35,7 +35,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `hello`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}, &ast.Param{Name: `z`, Type: CustomType(`MyType`)}},
 				ReturnTypes: []types.Type{},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -45,7 +45,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `multiply`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 				Lambda:      true,
 			},
 			lambda: true,
@@ -67,7 +67,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `equals`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Bool},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -77,7 +77,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -87,14 +87,16 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `add2`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
-				Body: []core.Statement{&ast.Definition{
-					Name: `a`,
-					Value: &ast.Binary{
-						Left:     &ast.Atom{Value: `x`, Type: lx.Identifier},
-						Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 27},
-						Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+				Body: &ast.Block{
+					Statements: []core.Statement{&ast.Definition{
+						Name: `a`,
+						Value: &ast.Binary{
+							Left:     &ast.Atom{Value: `x`, Type: lx.Identifier},
+							Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 27},
+							Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+						},
 					},
-				},
+					},
 				},
 			},
 		},
@@ -105,7 +107,7 @@ func TestParser_parse_func(t *testing.T) {
 				Definition:  ast.Definition{Name: `isCool`, Type: string(lx.Func)},
 				Parameters:  []*ast.Param{},
 				ReturnTypes: []types.Type{types.Bool},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 			},
 		},
 		{
@@ -160,7 +162,7 @@ func TestParser_attempt_parse_lambda_call(t *testing.T) {
 				Definition:  ast.Definition{Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 				Lambda:      true,
 			},
 		},
@@ -171,7 +173,7 @@ func TestParser_attempt_parse_lambda_call(t *testing.T) {
 				Definition:  ast.Definition{Type: string(lx.Func)},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: CustomType(`SomeType`)}, &ast.Param{Name: `y`, Type: CustomType(`SomeType`)}},
 				ReturnTypes: []types.Type{CustomType(`MyType`), types.Bool},
-				Body:        []core.Statement{},
+				Body:        &ast.Block{},
 				Lambda:      true,
 			},
 		},
@@ -183,7 +185,7 @@ func TestParser_attempt_parse_lambda_call(t *testing.T) {
 					Definition:  ast.Definition{Type: string(lx.Func)},
 					Parameters:  []*ast.Param{},
 					ReturnTypes: []types.Type{},
-					Body:        []core.Statement{},
+					Body:        &ast.Block{},
 					Lambda:      true,
 				},
 				Args: []core.Expression{},
@@ -197,7 +199,7 @@ func TestParser_attempt_parse_lambda_call(t *testing.T) {
 					Definition:  ast.Definition{Type: string(lx.Func)},
 					Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 					ReturnTypes: []types.Type{},
-					Body:        []core.Statement{},
+					Body:        &ast.Block{},
 					Lambda:      true,
 				},
 				Args: []core.Expression{&ast.Atom{Type: lx.Int, Value: `1`}, &ast.Atom{Type: lx.Identifier, Value: `z`}},
@@ -271,6 +273,69 @@ func TestParser_attempt_parse_named_call(t *testing.T) {
 			}
 			if got := p.attempt_parse_named_call(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_named_call() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParser_parse_block(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  *ast.Block
+	}{
+		{
+			name:  `no statements`,
+			input: `{}`,
+			want:  &ast.Block{},
+		},
+		{
+			name:  `1 statement`,
+			input: `{x := y + 2}`,
+			want: &ast.Block{
+				Statements: []core.Statement{
+					&ast.Definition{Name: `x`, Value: &ast.Binary{
+						Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
+						Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 9},
+						Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+					}},
+				},
+			},
+		},
+		{
+			name: `multiple statements`,
+			input: `{
+				var str string
+				i := 2
+				str = "ha" * i
+			}`,
+			want: &ast.Block{
+				Statements: []core.Statement{
+					&ast.Definition{
+						Name: `str`,
+						Type: string(lx.String),
+					},
+					&ast.Definition{
+						Name:  `i`,
+						Value: &ast.Atom{Value: `2`, Type: lx.Int},
+					},
+					&ast.Assignment{
+						Identifier: `str`,
+						Value: &ast.Binary{
+							Left:     &ast.Atom{Value: `ha`, Type: lx.String},
+							Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 4, Column: 16},
+							Right:    &ast.Atom{Value: `i`, Type: lx.Identifier},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if got := p.parse_block(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_block() = %v, want %v", got, tt.want)
 			}
 		})
 	}

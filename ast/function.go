@@ -17,10 +17,10 @@ type Param struct {
 type Function struct {
 	core.Expression
 	Definition
-	Parameters  []*Param // TODO(DEV) use param,
+	Parameters  []*Param
 	Lambda      bool
 	ReturnTypes []types.Type
-	Body        []core.Statement
+	Body        *Block
 	Owner       types.Type
 	Private     bool
 }

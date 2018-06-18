@@ -4,9 +4,9 @@ import "github.com/amupitan/hero/ast/core"
 
 type Block struct {
 	core.Statement
-	expressions []core.Expression
+	Statements []core.Statement
 }
 
 func (b *Block) String() string {
-	return `{ ` + core.StringifyExpressions(b.expressions) + `}`
+	return `{ ` + core.StringifyStatements(b.Statements) + `}`
 }
