@@ -396,42 +396,68 @@ func (l *Lexer) consumeDots() Token {
 
 // consumeRune consumes a rune token
 func (l *Lexer) consumeRune() Token {
-	if b := l.getCurr(); b != '\'' {
-		t := l.getUnknownToken(string(b))
-		l.move()
+	// consume_quote returns an empty Token and true if a quote
+	// can be consumed else it returns an unknown token and false
+	consume_quote := func() (Token, bool) {
+		if b, ok := l.peek(); !ok || b != '\'' {
+			col := l.Column
+			l.move()
+			if !ok {
+				return UnknownToken(``, l.Line, col), false
+			}
+			return UnknownToken(string(b), l.Line, col), false
+		}
+		return Token{}, true
+	}
+
+	if t, ok := consume_quote(); !ok {
 		return t
 	}
 
 	var value bytes.Buffer
 
+	// consume opening quote
 	l.move()
-	c := l.getCurr()
 
+	// check character
+	c, ok := l.peek()
+	if !ok {
+		col := l.Column
+		l.move()
+		return UnknownToken(``, l.Line, col)
+	}
+
+	col := l.Column
 	// consume escape character if one exists
 	if c == '\\' {
 		value.WriteByte('\\')
 		l.move()
-		c = l.getCurr()
+		if c, ok = l.peek(); !ok {
+			l.move()
+			return l.getUnknownToken(``)
+		}
 		// TODO: check valid escapes
 	}
+
+	// write charcter
+	value.WriteRune(c)
+
+	// consume character
 	l.move()
 
-	if b := l.getCurr(); b != '\'' {
-		t := l.getUnknownToken(string(b))
-		l.move()
+	if t, ok := consume_quote(); !ok {
 		return t
 	}
 
-	value.WriteRune(c)
+	// consume closing quote
+	l.move()
 
-	t := Token{
-		Column: l.Column,
+	return Token{
+		Column: col,
 		Line:   l.Line,
 		Type:   Rune,
 		Value:  value.String(),
 	}
-	l.move()
-	return t
 }
 
 func (l *Lexer) consumeString() Token {
