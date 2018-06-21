@@ -342,3 +342,156 @@ func TestParser_parse_block(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_parse_if(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        *ast.If
+		shouldPanic bool
+	}{
+		{
+			name:  `one variable evaluation, no parenthesis`,
+			input: `if x {}`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`},
+				Body:      &ast.Block{},
+			},
+		},
+		{
+			name:  `call evaluation, no parenthesis`,
+			input: `if !isFree() {}`,
+			want: &ast.If{
+				Condition: &ast.Call{Name: `isFree`, Args: []core.Expression{}, Negated: true},
+				Body:      &ast.Block{},
+			},
+		},
+		{
+			name:  `one variable evaluation with parenthesis`,
+			input: `if (x) {}`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`},
+				Body:      &ast.Block{},
+			},
+		},
+		{
+			name:  `multi-variable evaluation with parenthesis`,
+			input: `if (x != getValue()) {}`,
+			want: &ast.If{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+					Operator: lx.Token{Value: `!=`, Type: lx.NotEqual, Line: 1, Column: 7},
+					Right:    &ast.Call{Name: `getValue`, Args: []core.Expression{}},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `multi-variable evaluation, no parenthesis`,
+			input: `if x != getValue() {}`,
+			want: &ast.If{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+					Operator: lx.Token{Value: `!=`, Type: lx.NotEqual, Line: 1, Column: 6},
+					Right:    &ast.Call{Name: `getValue`, Args: []core.Expression{}},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:        `invalid condition - integer`,
+			input:       `if 3 {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `invalid condition - arithmetic operation`,
+			input:       `if x + 3 {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `invalid condition - assignment`,
+			input:       `if x = 3 {}`,
+			shouldPanic: true,
+		},
+		{
+			name: `negation evaluation, with two statements`,
+			input: `
+				if !x {
+					x = y % 2
+				}
+			`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`, Negated: true},
+				Body: &ast.Block{
+					Statements: []core.Statement{&ast.Assignment{
+						Identifier: `x`,
+						Value: &ast.Binary{
+							Left:     &ast.Atom{Type: lx.Identifier, Value: `y`},
+							Operator: lx.Token{Value: `%`, Type: lx.Mod, Line: 3, Column: 12},
+							Right:    &ast.Atom{Type: lx.Int, Value: `2`},
+						},
+					}},
+				},
+			},
+		},
+		{
+			name: `if else`,
+			input: `if x {} else{
+				x = y
+			}`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`},
+				Body:      &ast.Block{},
+				Else: &ast.If{
+					Body: &ast.Block{
+						Statements: []core.Statement{&ast.Assignment{Identifier: `x`, Value: &ast.Atom{Type: lx.Identifier, Value: `y`}}},
+					},
+				},
+			},
+		},
+		{
+			name:  `if else-if`,
+			input: `if x {} else if (y) { x = y }`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`},
+				Body:      &ast.Block{},
+				Else: &ast.If{
+					Condition: &ast.Atom{Type: lx.Identifier, Value: `y`},
+					Body: &ast.Block{
+						Statements: []core.Statement{&ast.Assignment{Identifier: `x`, Value: &ast.Atom{Type: lx.Identifier, Value: `y`}}},
+					},
+				},
+			},
+		},
+		{
+			name:  `if else-if else`,
+			input: `if x {} else if (y) { x = y } else { runner.start() }`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Identifier, Value: `x`},
+				Body:      &ast.Block{},
+				Else: &ast.If{
+					Condition: &ast.Atom{Type: lx.Identifier, Value: `y`},
+					Body: &ast.Block{
+						Statements: []core.Statement{&ast.Assignment{Identifier: `x`, Value: &ast.Atom{Type: lx.Identifier, Value: `y`}}},
+					},
+					Else: &ast.If{
+						Body: &ast.Block{
+							Statements: []core.Statement{&ast.Call{Name: `start`, Object: `runner`, Args: []core.Expression{}}},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.parse_if(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_if() = %s, want %s", got, tt.want)
+			}
+		})
+	}
+}

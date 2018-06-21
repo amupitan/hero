@@ -63,7 +63,7 @@ const (
 	LessThan           TokenType = "<"
 	LessThanOrEqual    TokenType = "<="
 	Equal              TokenType = "=="
-	NotEqual           TokenType = "!=" // TODO  parse not equal
+	NotEqual           TokenType = "!="
 
 	/// Boolean operators
 	And TokenType = "&&"

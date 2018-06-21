@@ -430,8 +430,83 @@ func (p *Parser) parse_func_params() []*ast.Param {
 	return params
 }
 
+// parse_if parses an if statement
+func (p *Parser) parse_if() *ast.If {
+	p.expect(lx.If)
+
+	hasLeftParen := false
+	// attempt to consume expression in a parenthesis
+	if p.accept(lx.LeftParenthesis) {
+		// skip left paren
+		p.next()
+		hasLeftParen = true
+	}
+	// get condition
+	cond := p.parse_expression()
+
+	// consume right paren if a left was consumed
+	if hasLeftParen {
+		p.expect(lx.RightParenthesis)
+	}
+
+	if !isBooleanExpr(cond) {
+		// TODO(DEV) include line and column information
+		report(`Only boolean expressions are allowed in if statements`)
+		return nil
+	}
+	body := p.parse_block()
+
+	// TODO(DEV) determine whether new lines are allowed between if elses
+
+	var else_ *ast.If
+	if p.accept(lx.Else) {
+		// consume else token
+		p.next()
+
+		// check if it's an else-if
+		if p.nextIs(lx.If) {
+			else_ = p.parse_if()
+		} else {
+			else_ = &ast.If{
+				Body: p.parse_block(),
+			}
+		}
+	}
+
+	return &ast.If{
+		Condition: cond,
+		Body:      body,
+		Else:      else_,
+	}
+}
+
 // isBooleanAble returns true if the token could
 // possibly be a boolean value
 func isBooleanAble(t lx.TokenType) bool {
 	return t == lx.True || t == lx.False || t == lx.Identifier
+}
+
+// isBooleanBinaryExpr returns true if the binary
+// expression's operator is a comparator
+// i.e. ==, <, >, <=, !=
+func isBooleanBinaryExpr(op lx.TokenType) bool {
+	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual || op == lx.NotEqual
+}
+
+// isBooleanExpr returns true if the expression is a
+// valid boolean expression
+// e.g. identifier, boolean binary expression & calls
+// only boolean expressions can be negated
+func isBooleanExpr(e core.Expression) bool {
+	// TODO(DEV) handle true and false keywords
+	switch exp := e.(type) {
+	case *ast.Atom:
+		return exp.Type == lx.Identifier
+	case *ast.Binary:
+		return isBooleanBinaryExpr(exp.Operator.Type)
+	case *ast.Call:
+		return true
+	}
+
+	return false
 }
