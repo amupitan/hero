@@ -262,3 +262,48 @@ func TestLexer_consumeRune(t *testing.T) {
 		})
 	}
 }
+
+func TestLexer_consumeArithmeticOrBitOperator(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        string
+		want         Token
+		wantPosition int
+	}{
+		{
+			name:         `not operator`,
+			input:        `!`,
+			want:         UnknownToken(`!`, 1, 1),
+			wantPosition: 0,
+		},
+		{
+			name:         `bit-wise or operator`,
+			input:        `|`,
+			want:         Token{Type: BitOr, Line: 1, Column: 1, Value: string(BitOr)},
+			wantPosition: 1,
+		},
+		{
+			name:         `bit-wise and-assign operator`,
+			input:        `&=`,
+			want:         Token{Type: BitAndEq, Line: 1, Column: 1, Value: string(BitAndEq)},
+			wantPosition: 2,
+		},
+		{
+			name:         `bit-wise xor-assign operator`,
+			input:        `^=`,
+			want:         Token{Type: BitXorEq, Line: 1, Column: 1, Value: string(BitXorEq)},
+			wantPosition: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := New(tt.input)
+			if got := l.consumeArithmeticOrBitOperator(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Lexer.consumeArithmeticOrBitOperator() = %v, want %v", got, tt.want)
+			}
+			if l.position != tt.wantPosition {
+				t.Errorf("Lexer.consumeArithmeticOrBitOperator() Lexer cursor is %d but expected to be %d", l.position, tt.wantPosition)
+			}
+		})
+	}
+}

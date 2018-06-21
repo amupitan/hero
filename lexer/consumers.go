@@ -200,6 +200,9 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 			t.Type = BitXor
 		case '~':
 			t.Type = BitNot
+		default:
+			l.retract()
+			return l.getUnknownToken(string(op))
 		}
 		return t
 	}
