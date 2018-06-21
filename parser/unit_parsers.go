@@ -45,29 +45,30 @@ func (p *Parser) parse_expression() core.Expression {
 
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
 // it parses a lambda function if possible
-func (p *Parser) attempt_parse_call() core.Expression {
+func (p *Parser) attempt_parse_call(isNegated bool) core.Expression {
 
 	if p.accept(lx.Identifier) {
 		// This can't simply be changed to return p.attempt_parse_named_call()
 		// because p.attempt_parse_named_call() can never return nil since
 		// it has a type. See: https://golang.org/doc/faq#nil_error
-		if c := p.attempt_parse_named_call(); c != nil {
+		if c := p.attempt_parse_named_call(isNegated); c != nil {
 			return c
 		}
 		return nil
 	}
-	return p.attempt_parse_lambda_call()
+	return p.attempt_parse_lambda_call(isNegated)
 }
 
 // attempt_parse_lambda_call attempts to parse a call
 // from a lambda expression, returns the lambda expression
 // if it is not call or panics if neither is possible
-func (p *Parser) attempt_parse_lambda_call() core.Expression {
+func (p *Parser) attempt_parse_lambda_call(isNegated bool) core.Expression {
 	f := p.parse_func(true)
 	if t := p.peek(); t.Type == lx.LeftParenthesis {
 		return &ast.Call{
-			Args: p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }), //TODO(CLEAN) parser arg
-			Func: f,
+			Args:    p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }), //TODO(CLEAN) parser arg
+			Func:    f,
+			Negated: isNegated,
 		}
 	}
 
@@ -76,7 +77,7 @@ func (p *Parser) attempt_parse_lambda_call() core.Expression {
 
 // attempt_parse_named_call attempts to parse a call
 // from an identifier
-func (p *Parser) attempt_parse_named_call() *ast.Call {
+func (p *Parser) attempt_parse_named_call(isNegated bool) *ast.Call {
 	object := ``
 	identifier := p.expect(lx.Identifier)
 	if p.nextIs(lx.Dot) {
@@ -95,9 +96,10 @@ func (p *Parser) attempt_parse_named_call() *ast.Call {
 
 	// TODO: convert expression to call.params?
 	return &ast.Call{
-		Name:   identifier.Value,
-		Args:   params,
-		Object: object,
+		Name:    identifier.Value,
+		Args:    params,
+		Object:  object,
+		Negated: isNegated,
 	}
 }
 
@@ -169,10 +171,16 @@ func (p *Parser) parse_atom() core.Expression {
 		return exp
 	}
 
-	// parse call if it is a named call
-	// or lambda call
-	if p.accept(lx.Identifier) || p.accept(lx.Func) {
-		if e := p.attempt_parse_call(); e != nil {
+	// check for negation
+	isNegated := p.accept(lx.Not)
+	if isNegated {
+		// consume negation token
+		p.next()
+	}
+
+	// parse call if it is a named or lambda call
+	if p.nextIs(lx.Identifier) || p.nextIs(lx.Func) {
+		if e := p.attempt_parse_call(isNegated); e != nil {
 			return e
 		}
 	}
@@ -184,10 +192,17 @@ func (p *Parser) parse_atom() core.Expression {
 		lx.Rune,
 		lx.Underscore)
 
+	if isNegated && !isBooleanAble(t.Type) {
+		// TODO(REPORT) better message
+		report(`cannot negate non-boolean type`)
+		return nil
+	}
+
 	// TODO: allow functions
 	return &ast.Atom{
-		Type:  t.Type,
-		Value: t.Value,
+		Type:    t.Type,
+		Value:   t.Value,
+		Negated: isNegated,
 	}
 }
 
@@ -413,5 +428,10 @@ func (p *Parser) parse_func_params() []*ast.Param {
 	}
 
 	return params
+}
 
+// isBooleanAble returns true if the token could
+// possibly be a boolean value
+func isBooleanAble(t lx.TokenType) bool {
+	return t == lx.True || t == lx.False || t == lx.Identifier
 }

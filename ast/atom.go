@@ -7,8 +7,9 @@ import (
 
 type Atom struct {
 	core.Expression
-	Type  lexer.TokenType
-	Value string
+	Type    lexer.TokenType
+	Value   string
+	Negated bool
 }
 
 func (a *Atom) String() string {

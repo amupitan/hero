@@ -8,10 +8,11 @@ import (
 
 type Call struct {
 	core.Expression
-	Name   string // TODO: take in complete token?
-	Args   []core.Expression
-	Object string
-	Func   *Function
+	Name    string // TODO: take in complete token?
+	Args    []core.Expression
+	Object  string
+	Func    *Function
+	Negated bool
 }
 
 func (c *Call) String() string {

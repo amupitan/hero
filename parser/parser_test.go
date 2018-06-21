@@ -296,6 +296,7 @@ func TestParser_attempt_parse_call(t *testing.T) {
 		name        string
 		input       string
 		want        core.Expression
+		isNegated   bool
 		shouldPanic bool
 	}{
 		{
@@ -327,7 +328,7 @@ func TestParser_attempt_parse_call(t *testing.T) {
 			if tt.shouldPanic {
 				defer expectPanic(t, nil)
 			}
-			if got := p.attempt_parse_call(); !reflect.DeepEqual(got, tt.want) {
+			if got := p.attempt_parse_call(tt.isNegated); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_call() = %v, want %v", got, tt.want)
 			}
 		})
@@ -452,6 +453,36 @@ func TestParser_parse_atom(t *testing.T) {
 				Args:   []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
 				Object: `foo`,
 			},
+		},
+		{
+			name:  `negated identifier`,
+			input: `!foo`,
+			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier, Negated: true},
+		},
+		{
+			name:  `negated call`,
+			input: `!isWild()`,
+			want:  &ast.Call{Name: `isWild`, Negated: true, Args: []core.Expression{}},
+		},
+		{
+			name:  `negated object call`,
+			input: `!foo.print(1, "hello")`,
+			want: &ast.Call{
+				Name:    `print`,
+				Args:    []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+				Object:  `foo`,
+				Negated: true,
+			},
+		},
+		{
+			name:        `negated literals are not allowed - string`,
+			input:       `!"nope"`,
+			shouldPanic: true,
+		},
+		{
+			name:        `negated literals are not allowed - float`,
+			input:       `!1.234`,
+			shouldPanic: true,
 		},
 	}
 	for _, tt := range tests {
