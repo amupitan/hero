@@ -138,3 +138,11 @@ var (
 func (t Token) String() string {
 	return fmt.Sprintf("Token(Value: %s, Type: %s, Position: %d:%d)", t.Value, t.Type, t.Line, t.Column)
 }
+
+// IsKeyword returns true if the token type is a keyword
+func IsKeyword(t TokenType) bool {
+	if _, ok := keywords[t]; ok {
+		return true
+	}
+	return false
+}
