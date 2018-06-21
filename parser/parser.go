@@ -95,6 +95,7 @@ func (p *Parser) Parse() *core.Runtime {
 // delimited parses the content with a [start] and a [stop] token using the [separator]
 // as a delimeter and [expr_parser] to parse the content. [end_sep] flags whether a separator is
 // allowed at the end
+// It uses an [p.parse_expression] if none is provided
 func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, expr_parser parser) []core.Expression {
 	if !p.nextIs(start) {
 		return nil
@@ -107,6 +108,11 @@ func (p *Parser) delimited(start, stop, separator lx.TokenType, end_sep bool, ex
 	if p.accept(stop) {
 		p.next()
 		return []core.Expression{}
+	}
+
+	// use expression parser if no parser is provided
+	if expr_parser == nil {
+		expr_parser = func(p *Parser) core.Expression { return p.parse_expression() }
 	}
 
 	params := make([]core.Expression, 0, 10) // TODO(CLEAN) we assume delimted content is usually ≤ 10

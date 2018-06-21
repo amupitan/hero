@@ -129,6 +129,14 @@ func TestParser_parse_statement(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  `parse return`,
+			input: `return 1,2`,
+			want: &ast.Return{Values: []core.Expression{
+				&ast.Atom{Type: lx.Int, Value: `1`},
+				&ast.Atom{Type: lx.Int, Value: `2`},
+			}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

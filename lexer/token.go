@@ -22,10 +22,19 @@ const (
 	Rune       TokenType = "rune"
 	Underscore TokenType = "_"
 
+	/// Builtin Types
+	BoolT    TokenType = "bool type"
+	FloatT   TokenType = "float type"
+	GenericT TokenType = "generic type"
+	IntT     TokenType = "int type"
+	RuneT    TokenType = "rune type"
+	StringT  TokenType = "string type"
+
 	/// Keywords
-	Break     TokenType = "continue"
+	Break     TokenType = "break"
 	Class     TokenType = "class"
 	Const     TokenType = "const"
+	Continue  TokenType = "continue"
 	Else      TokenType = "else"
 	For       TokenType = "for"
 	False     TokenType = "false"
@@ -114,6 +123,7 @@ var keywords = map[TokenType]struct{}{
 	Break:     struct{}{},
 	Class:     struct{}{},
 	Const:     struct{}{},
+	Continue:  struct{}{},
 	Else:      struct{}{},
 	For:       struct{}{},
 	False:     struct{}{},
@@ -145,4 +155,10 @@ func IsKeyword(t TokenType) bool {
 		return true
 	}
 	return false
+}
+
+// IsBuiltinType returns true of the token type represents
+// a builtin type
+func IsBuiltinType(t TokenType) bool {
+	return t == BoolT || t == FloatT || t == GenericT || t == IntT || t == RuneT || t == StringT
 }

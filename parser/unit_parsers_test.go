@@ -495,3 +495,75 @@ func TestParser_parse_if(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_parse_return(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        *ast.Return
+		shouldPanic bool
+	}{
+		{
+			name:  `return nothing`,
+			input: `return`,
+			want:  &ast.Return{Values: []core.Expression{}},
+		},
+		{
+			name:  `return one thing - a call`,
+			input: `return getID()`,
+			want: &ast.Return{Values: []core.Expression{
+				&ast.Call{Name: `getID`, Args: []core.Expression{}},
+			}},
+		},
+		{
+			name:  `return values in parenthesis`,
+			input: `return (1,2,3)`,
+			want: &ast.Return{Values: []core.Expression{
+				&ast.Atom{Type: lx.Int, Value: `1`},
+				&ast.Atom{Type: lx.Int, Value: `2`},
+				&ast.Atom{Type: lx.Int, Value: `3`},
+			}},
+		},
+		{
+			name:  `return values with no parenthesis`,
+			input: `return 1,2,3`,
+			want: &ast.Return{Values: []core.Expression{
+				&ast.Atom{Type: lx.Int, Value: `1`},
+				&ast.Atom{Type: lx.Int, Value: `2`},
+				&ast.Atom{Type: lx.Int, Value: `3`},
+			}},
+		},
+		{
+			name:  `multi-type return`,
+			input: `return isValid, "yea!", func(){}, 5.3e-9`, //TODO(TEST) add a bool to the returned things
+			want: &ast.Return{Values: []core.Expression{
+				&ast.Atom{Type: lx.Identifier, Value: `isValid`},
+				&ast.Atom{Type: lx.String, Value: `yea!`},
+				&ast.Function{
+					Lambda:      true,
+					Definition:  ast.Definition{Type: string(lx.Func)},
+					Body:        &ast.Block{},
+					Parameters:  []*ast.Param{},
+					ReturnTypes: []types.Type{},
+				},
+				&ast.Atom{Type: lx.Float, Value: `5.3e-9`},
+			}},
+		},
+		{
+			name:        `invalid token in return`,
+			input:       `return 1, var`,
+			shouldPanic: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.parse_return(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_return() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

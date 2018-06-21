@@ -27,6 +27,7 @@ func (p *Parser) parse_statement() core.Statement {
 	case lx.LeftBrace:
 		return p.parse_block()
 	case lx.Return:
+		return p.parse_return()
 		//TODO
 
 	}
@@ -66,7 +67,7 @@ func (p *Parser) attempt_parse_lambda_call(isNegated bool) core.Expression {
 	f := p.parse_func(true)
 	if t := p.peek(); t.Type == lx.LeftParenthesis {
 		return &ast.Call{
-			Args:    p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }), //TODO(CLEAN) parser arg
+			Args:    p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, nil),
 			Func:    f,
 			Negated: isNegated,
 		}
@@ -87,7 +88,7 @@ func (p *Parser) attempt_parse_named_call(isNegated bool) *ast.Call {
 		object = identifier.Value
 		identifier = p.expect(lx.Identifier)
 	}
-	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, func(p *Parser) core.Expression { return p.parse_expression() }) //TODO(CLEAN) parser arg
+	params := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, nil)
 	if params == nil {
 		// if parse was unsuccessful, retract and return
 		p.unstep()
@@ -477,6 +478,52 @@ func (p *Parser) parse_if() *ast.If {
 		Condition: cond,
 		Body:      body,
 		Else:      else_,
+	}
+}
+
+// parse_return parses a return statement
+func (p *Parser) parse_return() *ast.Return {
+	// consume return token
+	p.expect(lx.Return)
+
+	if p.nextIs(lx.LeftParenthesis) {
+		return &ast.Return{
+			Values: p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, true, nil),
+		}
+	}
+
+	values := make([]core.Expression, 0, 5) // we assume most return statements will have ≤ 5 values
+	for {
+		// get next return value
+		isLiteral := func() bool {
+			t := p.peek().Type
+			for _, literal := range literals {
+				if t == literal {
+					return true
+				}
+			}
+			return false
+		}
+		// TODO(DEV) use nextIs(...)
+		if p.nextIs(lx.Identifier) || p.nextIs(lx.Func) || isLiteral() {
+			values = append(values, p.parse_expression())
+			// TODO(DEV) use a universal check for end of input
+		} else if !p.nextIs(lx.EndOfInput) {
+			// TODO(REPORT) use expectsOneOf or something better
+			report(`Expected an expression`)
+			return nil
+		}
+
+		// break if no comma is found
+		if !p.nextIs(lx.Comma) {
+			break
+		}
+
+		// consume comma
+		p.next()
+	}
+	return &ast.Return{
+		Values: values,
 	}
 }
 
