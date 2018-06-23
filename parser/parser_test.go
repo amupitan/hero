@@ -251,6 +251,7 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 }
 
 func TestParser_parse_binary(t *testing.T) {
+	invalid_op := lx.TokenType(`#`)
 	type fields struct {
 		input string
 		curr  int
@@ -265,6 +266,12 @@ func TestParser_parse_binary(t *testing.T) {
 		args   args
 		want   core.Expression
 	}{
+		{
+			name:   `invalid operator`,
+			fields: fields{`1 + 2`, 1},
+			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: &invalid_op},
+			want:   &ast.Atom{Value: `1`, Type: lx.Int},
+		},
 		{
 			name:   "integer addition",
 			fields: fields{"1+2", 1},
