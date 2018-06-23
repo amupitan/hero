@@ -30,6 +30,8 @@ func (l *Lexer) consumeDelimeter() Token {
 		t.Type = LeftBrace
 	case '}':
 		t.Type = RightBrace
+	case ';':
+		t.Type = SemiColon
 	default:
 		return UnknownToken(t.Value, l.Line, l.Column)
 	}

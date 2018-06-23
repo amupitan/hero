@@ -112,6 +112,7 @@ const (
 	RightBracket     TokenType = "]"
 	LeftBrace        TokenType = "{"
 	RightBrace       TokenType = "}"
+	SemiColon        TokenType = ";"
 
 	/// Special TokenTypes
 	EndOfInput TokenType = "end of input"

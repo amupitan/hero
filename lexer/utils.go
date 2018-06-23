@@ -127,7 +127,7 @@ func beginsRune(b rune) bool            { return b == '\'' }
 func beginsIdentifier(b rune) bool      { return b == '_' || isLetter(b) }
 
 func isDelimeter(b rune) bool {
-	return b == ',' || b == '(' || b == ')' || b == '[' || b == ']' || b == '{' || b == '}'
+	return b == ',' || b == ';' || b == '(' || b == ')' || b == '[' || b == ']' || b == '{' || b == '}'
 }
 
 func beginsLiteral(b rune) bool {

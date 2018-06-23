@@ -164,9 +164,3 @@ func (l *Lexer) skipComments() {
 		}
 	}
 }
-
-/*
-// hex, oct,unicode
-// escape charcters
-// Conditions
-*/
