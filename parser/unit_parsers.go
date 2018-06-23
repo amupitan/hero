@@ -24,6 +24,7 @@ func (p *Parser) parse_statement() core.Statement {
 	case lx.Func:
 		return p.parse_func(false)
 	case lx.If:
+		return p.parse_if()
 	case lx.LeftBrace:
 		return p.parse_block()
 	case lx.Return:
@@ -486,13 +487,12 @@ func (p *Parser) parse_return() *ast.Return {
 	// consume return token
 	p.expect(lx.Return)
 
-	if p.nextIs(lx.LeftParenthesis) {
-		return &ast.Return{
-			Values: p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, true, nil),
-		}
+	values := p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, true, nil)
+	if values != nil {
+		return &ast.Return{Values: values}
 	}
 
-	values := make([]core.Expression, 0, 5) // we assume most return statements will have ≤ 5 values
+	values = make([]core.Expression, 0, 5) // we assume most return statements will have ≤ 5 values
 	for {
 		// get next return value
 		isLiteral := func() bool {
@@ -537,7 +537,7 @@ func isBooleanAble(t lx.TokenType) bool {
 // expression's operator is a comparator
 // i.e. ==, <, >, <=, !=
 func isBooleanBinaryExpr(op lx.TokenType) bool {
-	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual || op == lx.NotEqual
+	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual || op == lx.NotEqual || op == lx.GreaterThanOrEqual
 }
 
 // isBooleanExpr returns true if the expression is a

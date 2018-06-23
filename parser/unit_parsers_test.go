@@ -135,6 +135,24 @@ func TestParser_parse_func(t *testing.T) {
 			input:       `func bad(,) bool {}`,
 			shouldPanic: true,
 		},
+		{
+			name:  `2 args, joined type, 1 return`,
+			input: `func add(x, y int) int { return x + y }`,
+			want: &ast.Function{
+				Definition:  ast.Definition{Name: `add`, Type: string(lx.Func)},
+				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
+				ReturnTypes: []types.Type{types.Int},
+				Body: &ast.Block{
+					Statements: []core.Statement{&ast.Return{
+						Values: []core.Expression{&ast.Binary{
+							Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+							Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 35},
+							Right:    &ast.Atom{Type: lx.Identifier, Value: `y`},
+						}},
+					}},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

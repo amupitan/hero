@@ -137,6 +137,37 @@ func TestParser_parse_statement(t *testing.T) {
 				&ast.Atom{Type: lx.Int, Value: `2`},
 			}},
 		},
+		{
+			name: `parse if`,
+			input: `if x >= 4 {
+						return "yolo"
+					}else{
+						return "dope"
+					}`,
+			want: &ast.If{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+					Operator: lx.Token{Value: `>=`, Type: lx.GreaterThanOrEqual, Line: 1, Column: 6},
+					Right:    &ast.Atom{Type: lx.Int, Value: `4`},
+				},
+				Body: &ast.Block{
+					Statements: []core.Statement{
+						&ast.Return{
+							Values: []core.Expression{&ast.Atom{Type: lx.String, Value: `yolo`}},
+						},
+					},
+				},
+				Else: &ast.If{
+					Body: &ast.Block{
+						Statements: []core.Statement{
+							&ast.Return{
+								Values: []core.Expression{&ast.Atom{Type: lx.String, Value: `dope`}},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
