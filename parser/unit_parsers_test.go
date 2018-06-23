@@ -417,6 +417,14 @@ func TestParser_parse_if(t *testing.T) {
 			},
 		},
 		{
+			name:  `literal bool`,
+			input: `if true {}`,
+			want: &ast.If{
+				Condition: &ast.Atom{Type: lx.Bool, Value: `true`},
+				Body:      &ast.Block{},
+			},
+		},
+		{
 			name:        `invalid condition - integer`,
 			input:       `if 3 {}`,
 			shouldPanic: true,
@@ -553,7 +561,7 @@ func TestParser_parse_return(t *testing.T) {
 		},
 		{
 			name:  `multi-type return`,
-			input: `return isValid, "yea!", func(){}, 5.3e-9`, //TODO(TEST) add a bool to the returned things
+			input: `return isValid, "yea!", func(){}, 5.3e-9, true`, //TODO(TEST) add a bool to the returned things
 			want: &ast.Return{Values: []core.Expression{
 				&ast.Atom{Type: lx.Identifier, Value: `isValid`},
 				&ast.Atom{Type: lx.String, Value: `yea!`},
@@ -565,6 +573,7 @@ func TestParser_parse_return(t *testing.T) {
 					ReturnTypes: []types.Type{},
 				},
 				&ast.Atom{Type: lx.Float, Value: `5.3e-9`},
+				&ast.Atom{Type: lx.Bool, Value: `true`},
 			}},
 		},
 		{

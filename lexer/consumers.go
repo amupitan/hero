@@ -359,20 +359,24 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 }
 
 // consumableKeyword returns a keyword/unknown token which can be consumed
+// this also consumes true/false literals
 func (l *Lexer) consumableKeyword(word string) Token {
-	col, Line := l.Column, l.Line
-
-	keyword := TokenType(word)
-	if _, ok := keywords[keyword]; ok {
-		return Token{
-			Type:   keyword,
-			Value:  word,
-			Column: col,
-			Line:   Line,
-		}
+	t := Token{
+		Value:  word,
+		Column: l.Column,
+		Line:   l.Line,
 	}
 
-	return UnknownToken(word, Line, col)
+	keyword := TokenType(word)
+	if keyword == `true` || keyword == `false` {
+		t.Type = Bool
+	} else if _, ok := keywords[keyword]; ok {
+		t.Type = keyword
+	} else {
+		t.Type = Unknown
+	}
+
+	return t
 }
 
 // consumeDots consumes a dot or dots token

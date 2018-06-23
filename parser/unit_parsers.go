@@ -187,12 +187,7 @@ func (p *Parser) parse_atom() core.Expression {
 		}
 	}
 
-	t := p.expectsOneOf(lx.Identifier,
-		lx.Int, lx.Float,
-		lx.String,
-		lx.RawString,
-		lx.Rune,
-		lx.Underscore)
+	t := p.expectsOneOf(VALUES...)
 
 	if isNegated && !isBooleanAble(t.Type) {
 		// TODO(REPORT) better message
@@ -530,7 +525,7 @@ func (p *Parser) parse_return() *ast.Return {
 // isBooleanAble returns true if the token could
 // possibly be a boolean value
 func isBooleanAble(t lx.TokenType) bool {
-	return t == lx.True || t == lx.False || t == lx.Identifier
+	return t == lx.Bool || t == lx.Identifier
 }
 
 // isBooleanBinaryExpr returns true if the binary
@@ -548,7 +543,7 @@ func isBooleanExpr(e core.Expression) bool {
 	// TODO(DEV) handle true and false keywords
 	switch exp := e.(type) {
 	case *ast.Atom:
-		return exp.Type == lx.Identifier
+		return exp.Type == lx.Bool || exp.Type == lx.Identifier
 	case *ast.Binary:
 		return isBooleanBinaryExpr(exp.Operator.Type)
 	case *ast.Call:

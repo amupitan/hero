@@ -358,3 +358,48 @@ func TestLexer_consumeBitShiftOperator(t *testing.T) {
 		})
 	}
 }
+
+func TestLexer_recognizeLiteral(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        string
+		want         Token
+		wantPosition int
+	}{
+		{
+			name:         `consume true literal`,
+			input:        `true`,
+			want:         Token{Column: 1, Line: 1, Type: Bool, Value: `true`},
+			wantPosition: 4,
+		},
+		{
+			name:         `consume false literal`,
+			input:        `false`,
+			want:         Token{Column: 1, Line: 1, Type: Bool, Value: `false`},
+			wantPosition: 5,
+		},
+		{
+			name:         `consume rune literal`,
+			input:        `'g'`,
+			want:         Token{Column: 2, Line: 1, Type: Rune, Value: `g`},
+			wantPosition: 3,
+		},
+		{
+			name:         `consume non-literal`,
+			input:        `;`,
+			want:         UnknownToken(`;`, 1, 1),
+			wantPosition: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := New(tt.input)
+			if got := l.recognizeLiteral(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Lexer.recognizeLiteral() = %v, want %v", got, tt.want)
+			}
+			if l.position != tt.wantPosition {
+				t.Errorf("Lexer.recognizeLiteral() Lexer cursor is %d but expected to be %d", l.position, tt.wantPosition)
+			}
+		})
+	}
+}

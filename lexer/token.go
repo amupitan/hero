@@ -14,6 +14,7 @@ type Token struct {
 
 const (
 	/// Identifiers and literals
+	Bool       TokenType = "bool"
 	Identifier TokenType = "identifier"
 	Int        TokenType = "int"
 	Float      TokenType = "float"
@@ -37,7 +38,6 @@ const (
 	Continue  TokenType = "continue"
 	Else      TokenType = "else"
 	For       TokenType = "for"
-	False     TokenType = "false"
 	Func      TokenType = "func"
 	If        TokenType = "if"
 	Interface TokenType = "interface"
@@ -46,7 +46,6 @@ const (
 	Null      TokenType = "null"
 	Package   TokenType = "package"
 	Return    TokenType = "return"
-	True      TokenType = "true"
 	This      TokenType = "this"
 	Var       TokenType = "var"
 
@@ -126,7 +125,6 @@ var keywords = map[TokenType]struct{}{
 	Continue:  struct{}{},
 	Else:      struct{}{},
 	For:       struct{}{},
-	False:     struct{}{},
 	Func:      struct{}{},
 	If:        struct{}{},
 	Interface: struct{}{},
@@ -135,7 +133,6 @@ var keywords = map[TokenType]struct{}{
 	Null:      struct{}{},
 	Package:   struct{}{},
 	Return:    struct{}{},
-	True:      struct{}{},
 	This:      struct{}{},
 	Var:       struct{}{},
 }

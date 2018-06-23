@@ -28,7 +28,9 @@ var precedence = map[lx.TokenType]int{
 	lx.Times: 20, lx.Div: 20, lx.Mod: 20,
 }
 
-var literals = []lx.TokenType{
+var VALUES = []lx.TokenType{
+	lx.Identifier,
+	lx.Bool,
 	lx.Int,
 	lx.Float,
 	lx.String,
@@ -36,6 +38,8 @@ var literals = []lx.TokenType{
 	lx.Rune,
 	lx.Underscore,
 }
+
+var literals = VALUES[1:]
 
 var builtins = map[string]types.Type{
 	`bool`:    types.Bool,
