@@ -261,17 +261,12 @@ func TestParser_parse_binary(t *testing.T) {
 		my_op *lx.TokenType
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   core.Expression
+		name        string
+		fields      fields
+		args        args
+		want        core.Expression
+		shouldPanic bool
 	}{
-		{
-			name:   `invalid operator`,
-			fields: fields{`1 + 2`, 1},
-			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: &invalid_op},
-			want:   &ast.Atom{Value: `1`, Type: lx.Int},
-		},
 		{
 			name:   "integer addition",
 			fields: fields{"1+2", 1},
@@ -288,10 +283,10 @@ func TestParser_parse_binary(t *testing.T) {
 			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: nil},
 			want: &ast.Binary{
 				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
-				Operator: lx.Token{Value: `+`, Type: lx.Plus},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
 				Right: &ast.Binary{
 					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
-					Operator: lx.Token{Value: `*`, Type: lx.Plus},
+					Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 4},
 					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
 				},
 			},
@@ -306,10 +301,10 @@ func TestParser_parse_binary(t *testing.T) {
 			},
 		},
 		{
-			name:   "invalid double assignment",
-			fields: fields{"a = 2 = 7", 1},
-			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
-			want:   nil,
+			name:        "invalid double assignment",
+			fields:      fields{"a = 2 = 7", 1},
+			args:        args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			shouldPanic: true,
 		},
 		{
 			name:   "addition assignment",
@@ -319,9 +314,33 @@ func TestParser_parse_binary(t *testing.T) {
 				Identifier: `a`,
 				Value: &ast.Binary{
 					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
-					Operator: lx.Token{Value: `+`, Type: lx.Plus},
+					Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 7},
 					Right:    &ast.Atom{Value: `.7`, Type: lx.Float},
 				},
+			},
+		},
+		{
+			name:   `invalid operator`,
+			fields: fields{`1 + 2`, 1},
+			args:   args{left: &ast.Atom{Value: `1`, Type: lx.Int}, my_op: &invalid_op},
+			want:   &ast.Atom{Value: `1`, Type: lx.Int},
+		},
+		{
+			name:   `increment operator`,
+			fields: fields{`i++`, 1},
+			args:   args{left: &ast.Atom{Value: `i`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `i`,
+				Value:      &ast.Operation{Type: lx.Increment},
+			},
+		},
+		{
+			name:   `decrement operator`,
+			fields: fields{`i--`, 1},
+			args:   args{left: &ast.Atom{Value: `i`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `i`,
+				Value:      &ast.Operation{Type: lx.Decrement},
 			},
 		},
 	}
@@ -329,8 +348,10 @@ func TestParser_parse_binary(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.fields.input)
 			p.curr = tt.fields.curr
-			defer expectPanic(t, tt.want)
-			if got := p.parse_binary(tt.args.left, tt.args.my_op); !expressionEqual(got, tt.want) {
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.parse_binary(tt.args.left, tt.args.my_op); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.parse_binary() = %v, want %v", got, tt.want)
 			}
 		})

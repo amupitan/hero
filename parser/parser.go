@@ -20,12 +20,12 @@ type Parser struct {
 type CustomType string
 
 var precedence = map[lx.TokenType]int{
-	lx.Assign:   1,
-	lx.Or:       2,
-	lx.And:      3,
-	lx.LessThan: 7, lx.GreaterThan: 7, lx.LessThanOrEqual: 7, lx.GreaterThanOrEqual: 7, lx.Equal: 7, lx.NotEqual: 7,
-	lx.Plus: 10, lx.Minus: 10,
-	lx.Times: 20, lx.Div: 20, lx.Mod: 20,
+	lx.Assign: 1, lx.Increment: 1, lx.Decrement: 1,
+	lx.Or:       4,
+	lx.And:      5,
+	lx.LessThan: 9, lx.GreaterThan: 9, lx.LessThanOrEqual: 9, lx.GreaterThanOrEqual: 9, lx.Equal: 9, lx.NotEqual: 9,
+	lx.Plus: 12, lx.Minus: 12,
+	lx.Times: 15, lx.Div: 15, lx.Mod: 15,
 }
 
 var VALUES = []lx.TokenType{

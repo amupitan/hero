@@ -224,6 +224,10 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 		}
 	}
 
+	if p.acceptsOneOf(lx.Increment, lx.Decrement) {
+		return p.parse_assignment(left)
+	}
+
 	// consume operator
 	op := p.next()
 
@@ -245,11 +249,20 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 
 // parse_assignment parses an assigment expression
 func (p *Parser) parse_assignment(e core.Expression) core.Expression {
-	// TODO(DEV) check that b.Left is an identifier
-	if b, ok := e.(*ast.Binary); ok {
+	switch a := e.(type) {
+	case *ast.Binary:
+		// TODO(DEV) check that b.Left is an identifier
 		return &ast.Assignment{
-			Identifier: b.Left.String(),
-			Value:      b.Right,
+			Identifier: a.Left.String(),
+			Value:      a.Right,
+		}
+	case *ast.Atom:
+		if a.Type == lx.Identifier {
+			t := p.expectsOneOf(lx.Increment, lx.Decrement)
+			return &ast.Assignment{
+				Identifier: a.Value,
+				Value:      &ast.Operation{Type: t.Type},
+			}
 		}
 	}
 	// TODO(DEV) find a better way to take care of invalid states
