@@ -118,7 +118,7 @@ func (l *Lexer) retract() {
 	if l.position > 0 {
 		l.position--
 	}
-	if l.Column > 0 {
+	if l.Column > 1 {
 		l.Column--
 	}
 }

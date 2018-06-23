@@ -105,11 +105,6 @@ func (l *Lexer) consumeBitShiftOperator() Token {
 		Column: l.Column,
 		Line:   l.Line,
 	}
-	l.move()
-
-	if next, _ := l.peek(); c != next {
-		return l.getUnknownToken(string(next))
-	}
 
 	switch c {
 	case '<':
@@ -119,10 +114,20 @@ func (l *Lexer) consumeBitShiftOperator() Token {
 		t.Type = BitRightShift
 		t.Value = string(BitRightShift)
 	default:
-		l.retract()
 		return l.getUnknownToken(string(c))
 	}
 
+	// consume first token
+	l.move()
+	// if the current and next tokens aren't the same
+	// then it can't be a bit shift(<< or >>)
+	if next, _ := l.peek(); c != next {
+		t = UnknownToken(string(next), l.Line, l.Column)
+		l.retract()
+		return t
+	}
+
+	// consume second token
 	l.move()
 	return t
 }

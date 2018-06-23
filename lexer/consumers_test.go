@@ -307,3 +307,54 @@ func TestLexer_consumeArithmeticOrBitOperator(t *testing.T) {
 		})
 	}
 }
+
+func TestLexer_consumeBitShiftOperator(t *testing.T) {
+	tests := []struct {
+		name         string
+		input        string
+		want         Token
+		wantPosition int
+	}{
+		{
+			name:         `left shift`,
+			input:        `<<`,
+			want:         Token{Type: BitLeftShift, Value: string(BitLeftShift), Line: 1, Column: 1},
+			wantPosition: 2,
+		},
+		{
+			name:         `right shift`,
+			input:        `>>`,
+			want:         Token{Type: BitRightShift, Value: string(BitRightShift), Line: 1, Column: 1},
+			wantPosition: 2,
+		},
+		{
+			name:         `invalid first token`,
+			input:        `&>`,
+			want:         UnknownToken(`&`, 1, 1),
+			wantPosition: 0,
+		},
+		{
+			name:         `invalid second token`,
+			input:        `>=`,
+			want:         UnknownToken(`=`, 1, 2),
+			wantPosition: 0,
+		},
+		{
+			name:         `invalid tokens`,
+			input:        `&&`,
+			want:         UnknownToken(`&`, 1, 1),
+			wantPosition: 0,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := New(tt.input)
+			if got := l.consumeBitShiftOperator(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Lexer.consumeBitShiftOperator() = %v, want %v", got, tt.want)
+			}
+			if l.position != tt.wantPosition {
+				t.Errorf("Lexer.consumeBitShiftOperator() Lexer cursor is %d but expected to be %d", l.position, tt.wantPosition)
+			}
+		})
+	}
+}
