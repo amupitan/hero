@@ -180,6 +180,20 @@ func TestParser_parse_statement(t *testing.T) {
 				Body: &ast.Block{},
 			},
 		},
+		{
+			name: `parse named loop`,
+			input: `flex:
+			for i == j {}`,
+			want: &ast.ForLoop{
+				Name: `flex`,
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 2, Column: 10},
+					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+				},
+				Body: &ast.Block{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

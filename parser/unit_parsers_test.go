@@ -634,6 +634,26 @@ func TestParser_parse_loop(t *testing.T) {
 			},
 		},
 		{
+			name: `named loops`,
+			input: `
+			outer:
+			for {
+				inner:
+				for{}
+			}`,
+			want: &ast.ForLoop{
+				Name: `outer`,
+				Body: &ast.Block{
+					Statements: []core.Statement{
+						&ast.ForLoop{
+							Name: `inner`,
+							Body: &ast.Block{},
+						},
+					},
+				},
+			},
+		},
+		{
 			name:  `empty for loop with semicolons`,
 			input: ` for ;; {}`,
 			want: &ast.ForLoop{

@@ -20,6 +20,8 @@ func (p *Parser) parse_toplevel() core.Statement {
 func (p *Parser) parse_statement() core.Statement {
 	t := p.peek()
 	switch t.Type {
+	case lx.LoopName:
+		fallthrough
 	case lx.For:
 		return p.parse_loop()
 	case lx.Func:
@@ -493,7 +495,17 @@ func (p *Parser) parse_if() *ast.If {
 
 // parse_loop parses a for statement
 func (p *Parser) parse_loop() ast.Loop {
+	// check if loop is named
+	var name string
+	if p.accept(lx.LoopName) {
+		name = p.next().Value
+
+		// there was be a new line after a loop name
+		p.expect(lx.NewLine)
+	}
+
 	if rl := p.attempt_parse_range_loop(); rl != nil {
+		rl.Name = name
 		return rl
 	}
 	// 'for' token is already consumed
@@ -502,7 +514,7 @@ func (p *Parser) parse_loop() ast.Loop {
 
 	// if loop has no statements then parse the body
 	if p.nextIs(lx.LeftBrace) {
-		return &ast.ForLoop{Body: p.parse_block()}
+		return &ast.ForLoop{Name: name, Body: p.parse_block()}
 	}
 
 	// if a stement exists before the first semicolon
@@ -519,6 +531,7 @@ func (p *Parser) parse_loop() ast.Loop {
 	// it's a condition-only loop and we're done
 	if !p.nextIs(lx.SemiColon) {
 		return &ast.ForLoop{
+			Name:      name,
 			Condition: preLoop,
 			Body:      p.parse_block(),
 		}
@@ -544,6 +557,7 @@ func (p *Parser) parse_loop() ast.Loop {
 
 	// parse_body:
 	return &ast.ForLoop{
+		Name:          name,
 		PreLoop:       preLoop,
 		Condition:     condition,
 		PostIteration: postIter,
