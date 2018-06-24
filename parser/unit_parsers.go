@@ -490,6 +490,75 @@ func (p *Parser) parse_if() *ast.If {
 	}
 }
 
+// parse_loop parses a for statement
+func (p *Parser) parse_loop() ast.Loop {
+	if rl := p.attempt_parse_range_loop(); rl != nil {
+		return rl
+	}
+
+	return nil
+}
+
+func (p *Parser) attempt_parse_range_loop() *ast.RangeLoop {
+	p.expect(lx.For)
+	// get parser cursor before parse attempt
+	initial := p.curr
+
+	// flag for successfully parsing a range loop
+	success := false
+
+	// the value of the second identifier for the range loop
+	second := ``
+
+	// restore parser cursor if range loop
+	// was not successfully parsed
+	defer func() {
+		if !success {
+			p.curr = initial
+		}
+	}()
+
+	// consume first identifier
+	if !p.accept(lx.Identifier) { // TODO(DEV) or underscore
+		return nil
+	}
+	first := p.next().Value
+
+	// potentially consume in
+	if p.accept(lx.In) {
+		goto parse_iterable
+	}
+
+	// consume comma
+	if !p.nextIs(lx.Comma) {
+		return nil
+	}
+	p.next()
+
+	// consume second identifier
+	if !p.nextIs(lx.Identifier) { // TODO(DEV) or underscore
+		return nil
+	}
+	second = p.next().Value
+
+	if !p.nextIs(lx.In) {
+		return nil
+	}
+
+parse_iterable:
+	// consume in token
+	p.next()
+
+	iterable := p.expect(lx.Identifier).Value
+	success = true
+	return &ast.RangeLoop{
+		First:    first,
+		Second:   second,
+		Iterable: iterable,
+		Body:     p.parse_block(),
+	}
+}
+
 // parse_return parses a return statement
 func (p *Parser) parse_return() *ast.Return {
 	// consume return token

@@ -40,6 +40,7 @@ const (
 	For       TokenType = "for"
 	Func      TokenType = "func"
 	If        TokenType = "if"
+	In        TokenType = "in"
 	Interface TokenType = "interface"
 	Import    TokenType = "import"
 	New_      TokenType = "new"
@@ -128,6 +129,7 @@ var keywords = map[TokenType]struct{}{
 	For:       struct{}{},
 	Func:      struct{}{},
 	If:        struct{}{},
+	In:        struct{}{},
 	Interface: struct{}{},
 	Import:    struct{}{},
 	New_:      struct{}{},

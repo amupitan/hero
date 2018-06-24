@@ -594,3 +594,216 @@ func TestParser_parse_return(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_parse_loop(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		want        ast.Loop
+		shouldPanic bool
+	}{
+		{
+			name:  `popular loop - implied types`,
+			input: `for i := 0; i < s.length(); i++ {}`,
+			want: &ast.ForLoop{
+				PreLoop: &ast.Assignment{Identifier: `i`, Value: &ast.Atom{Type: lx.Int, Value: `0`}},
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.LessThan, Value: `<`, Line: 1, Column: 15},
+					Right: &ast.Call{
+						Args:   []core.Expression{},
+						Name:   `length`,
+						Object: `s`,
+					},
+				},
+				PostIteration: &ast.Assignment{
+					Identifier: `i`,
+					Value:      &ast.Operation{Type: lx.Increment},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `empty for loop`,
+			input: ` for {}`,
+			want: &ast.ForLoop{
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `empty for loop with semicolons`,
+			input: ` for ;; {}`,
+			want: &ast.ForLoop{
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `for loop with only condition`,
+			input: `for i == j {}`,
+			want: &ast.ForLoop{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 7},
+					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `for loop with only condition and semicolons`,
+			input: `for ;i == j; {}`,
+			want: &ast.ForLoop{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 7},
+					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `for loop with initial statement and condition`,
+			input: `for i = 0; i < 4; {}`,
+			want: &ast.ForLoop{
+				PreLoop: &ast.Assignment{Identifier: `i`, Value: &ast.Atom{Type: lx.Int, Value: `0`}},
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.GreaterThan, Value: `>`, Line: 1, Column: 14},
+					Right:    &ast.Atom{Type: lx.Int, Value: `4`},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		// {
+		// 	name:       `for loop with initial statement and comma, and condition`,
+		// 	input:      `for key, value := val; key < 5; {}`,
+		// 	want:       (TODO), TODO(TEST) this should be a valid statement but multivaraibale assignment must be a thing first
+		// },
+		{
+			name:        `for loop missing final semicolon`,
+			input:       ` for i = 0; i < 4 {}`,
+			shouldPanic: true,
+		},
+		{
+			name:  `for loop with only initial expression`,
+			input: ` for i = 0 ;; {}`,
+			want: &ast.ForLoop{
+				PreLoop: &ast.Assignment{Identifier: `i`, Value: &ast.Atom{Type: lx.Int, Value: `0`}},
+				Body:    &ast.Block{},
+			},
+		},
+		{
+			name:  `for loop with only final expression`,
+			input: ` for ;; i++ {}`,
+			want: &ast.ForLoop{
+				Body: &ast.Block{},
+				PostIteration: &ast.Assignment{
+					Identifier: `i`,
+					Value:      &ast.Operation{Type: lx.Increment},
+				},
+			},
+		},
+		{
+			name:  `empty for loop with body`,
+			input: ` for { x-- }`,
+			want: &ast.ForLoop{
+				Body: &ast.Block{
+					Statements: []core.Statement{
+						&ast.Assignment{
+							Identifier: `x`,
+							Value:      &ast.Operation{Type: lx.Decrement},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  `for range loop`,
+			input: `for i, elem in array {}`,
+			want: &ast.RangeLoop{
+				First:    `i`,
+				Second:   `elem`,
+				Iterable: `array`,
+				Body:     &ast.Block{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if tt.shouldPanic {
+				defer expectPanic(t, nil)
+			}
+			if got := p.parse_loop(); !reflect.DeepEqual(got, tt.want) {
+				// t.Errorf("Parser.parse_loop() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+func TestParser_parse_loop_range(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		want       *ast.RangeLoop
+		wantCursor int
+	}{
+		{
+			name:  `for range - 2 vars`,
+			input: `for i, elem in array {}`,
+			want: &ast.RangeLoop{
+				First:    `i`,
+				Second:   `elem`,
+				Iterable: `array`,
+				Body:     &ast.Block{},
+			},
+		},
+		{
+			name:  `for range - 1 var`,
+			input: `for i in array {}`,
+			want: &ast.RangeLoop{
+				First:    `i`,
+				Iterable: `array`,
+				Body:     &ast.Block{},
+			},
+		},
+		{
+			name:  `for range with body`,
+			input: `for i in array { x++ }`,
+			want: &ast.RangeLoop{
+				First:    `i`,
+				Iterable: `array`,
+				Body: &ast.Block{
+					Statements: []core.Statement{
+						&ast.Assignment{
+							Identifier: `x`,
+							Value:      &ast.Operation{Type: lx.Increment},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       `for range comma with no second identifier`,
+			input:      `for i, in array {}`,
+			want:       nil,
+			wantCursor: 1,
+		},
+		{
+			name:       `for range comma with no in`,
+			input:      `for key, value := val; key < 5; {}`,
+			want:       nil,
+			wantCursor: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if got := p.attempt_parse_range_loop(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.attempt_parse_range_loop() = %v, want %v", got, tt.want)
+			}
+			if tt.want == nil && p.curr != tt.wantCursor {
+				t.Errorf("Parser.attempt_parse_range_loop() cursor = %d, Expected cursor at %d", p.curr, tt.wantCursor)
+			}
+		})
+	}
+}
