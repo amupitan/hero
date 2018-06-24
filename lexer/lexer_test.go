@@ -34,7 +34,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func Test_nextState(t *testing.T) {
+func Test_nextNumberState(t *testing.T) {
 	type args struct {
 		currentState fsm.State
 		input        rune
@@ -104,6 +104,40 @@ func Test_nextState(t *testing.T) {
 			args{IntegerState, '-'},
 			NullState,
 		},
+		{"Start float with digit", args{BeginsFloatState, '8'}, FloatState},
+		{"Start float with decimal point", args{BeginsFloatState, '.'}, NullState},
+		{"Start float with exponent,e", args{BeginsFloatState, 'e'}, NullState},
+		{"Start float with exponent,E", args{BeginsFloatState, 'E'}, NullState},
+		{"Start float with sign,+", args{BeginsFloatState, '+'}, NullState},
+		{"Start float with sign,-", args{BeginsFloatState, '-'}, NullState},
+
+		{"Float with digit", args{FloatState, '8'}, FloatState},
+		{"Float with decimal point", args{FloatState, '.'}, NullState},
+		{"Float with exponent,e", args{FloatState, 'e'}, BeginExpState},
+		{"Float with exponent,E", args{FloatState, 'E'}, BeginExpState},
+		{"Float with sign,+", args{FloatState, '+'}, NullState},
+		{"Float with sign,-", args{FloatState, '-'}, NullState},
+
+		{"BeginExp with digit", args{BeginExpState, '8'}, ExponentState},
+		{"BeginExp with decimal point", args{BeginExpState, '.'}, NullState},
+		{"BeginExp with exponent,e", args{BeginExpState, 'e'}, NullState},
+		{"BeginExp with exponent,E", args{BeginExpState, 'E'}, NullState},
+		{"BeginExp with sign,+", args{BeginExpState, '+'}, BeginSignedExpState},
+		{"BeginExp with sign,-", args{BeginExpState, '-'}, BeginSignedExpState},
+
+		{"Signed Exponent with digit", args{BeginSignedExpState, '8'}, ExponentState},
+		{"Signed Exponent with decimal point", args{BeginSignedExpState, '.'}, NullState},
+		{"Signed Exponent with exponent,e", args{BeginSignedExpState, 'e'}, NullState},
+		{"Signed Exponent with exponent,E", args{BeginSignedExpState, 'E'}, NullState},
+		{"Signed Exponent with sign,+", args{BeginSignedExpState, '+'}, NullState},
+		{"Signed Exponent with sign,-", args{BeginSignedExpState, '-'}, NullState},
+
+		{"Exponent with digit", args{ExponentState, '8'}, ExponentState},
+		{"Exponent with decimal point", args{ExponentState, '.'}, NullState},
+		{"Exponent with exponent,e", args{ExponentState, 'e'}, NullState},
+		{"Exponent with exponent,E", args{ExponentState, 'E'}, NullState},
+		{"Exponent with sign,+", args{ExponentState, '+'}, NullState},
+		{"Exponent with sign,-", args{ExponentState, '-'}, NullState},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
