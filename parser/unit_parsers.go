@@ -165,6 +165,13 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 
 // parse_atom parses out an atom - which is a literal value or identifier
 func (p *Parser) parse_atom() core.Expression {
+	// check for negation
+	isNegated := p.accept(lx.Not)
+	if isNegated {
+		// consume negation token
+		p.next()
+	}
+
 	// attempt to consume expression in a parenthesis
 	if p.accept(lx.LeftParenthesis) {
 		// skip left paren
@@ -173,14 +180,12 @@ func (p *Parser) parse_atom() core.Expression {
 
 		// consume right paren
 		p.expect(lx.RightParenthesis)
-		return exp
-	}
 
-	// check for negation
-	isNegated := p.accept(lx.Not)
-	if isNegated {
-		// consume negation token
-		p.next()
+		// attempt to negate if there was a negation
+		if isNegated {
+			negateExpr(exp)
+		}
+		return exp
 	}
 
 	// parse call if it is a named or lambda call
@@ -239,6 +244,11 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 		Left:     left,
 		Operator: *op,
 		Right:    right,
+	}
+
+	// check for invalid boolean expressions
+	if op.Type == lx.And || op.Type == lx.Or {
+		ensureBoolean(left, right)
 	}
 
 	e := p.parse_binary(b, my_op)
@@ -680,7 +690,8 @@ func isBooleanAble(t lx.TokenType) bool {
 // expression's operator is a comparator
 // i.e. ==, <, >, <=, !=
 func isBooleanBinaryExpr(op lx.TokenType) bool {
-	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual || op == lx.NotEqual || op == lx.GreaterThanOrEqual
+	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual ||
+		op == lx.NotEqual || op == lx.GreaterThanOrEqual || op == lx.And || op == lx.Or
 }
 
 // isBooleanExpr returns true if the expression is a
@@ -688,7 +699,6 @@ func isBooleanBinaryExpr(op lx.TokenType) bool {
 // e.g. identifier, boolean binary expression & calls
 // only boolean expressions can be negated
 func isBooleanExpr(e core.Expression) bool {
-	// TODO(DEV) handle true and false keywords
 	switch exp := e.(type) {
 	case *ast.Atom:
 		return exp.Type == lx.Bool || exp.Type == lx.Identifier
@@ -699,4 +709,33 @@ func isBooleanExpr(e core.Expression) bool {
 	}
 
 	return false
+}
+
+// ensureBoolean fails if one of the expressions
+// is not a boolean expression
+func ensureBoolean(exps ...core.Expression) {
+	for _, e := range exps {
+		if !isBooleanExpr(e) {
+			report(e.String() + ` is used in a boolean context but is not a boolean expression`)
+		}
+	}
+}
+
+// negateExpr negates a booleanable expression
+// TODO(DEV) this should be moved a booleanable interface
+// that has a Negate() method
+func negateExpr(e core.Expression) {
+	switch exp := e.(type) {
+	case *ast.Atom:
+		exp.Negated = true
+	case *ast.Binary:
+		if isBooleanBinaryExpr(exp.Operator.Type) {
+			exp.Negated = true
+		}
+	case *ast.Call:
+		exp.Negated = true
+	default:
+		// TODO(REPORT) better message
+		report(`cannot negate non-boolean expression`)
+	}
 }

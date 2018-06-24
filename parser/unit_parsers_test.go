@@ -393,6 +393,45 @@ func TestParser_parse_if(t *testing.T) {
 			},
 		},
 		{
+			name:  `evaluation with parenthesis`,
+			input: `if !(x < 3) {}`,
+			want: &ast.If{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+					Operator: lx.Token{Type: lx.LessThan, Value: `<`, Line: 1, Column: 8},
+					Right:    &ast.Atom{Type: lx.Int, Value: `3`},
+					Negated:  true,
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:  `multiple evaluation with parenthesis`,
+			input: `if (!y && (x < 3)) {}`,
+			want: &ast.If{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `y`, Negated: true},
+					Operator: lx.Token{Type: lx.And, Value: `&&`, Line: 1, Column: 8},
+					Right: &ast.Binary{
+						Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+						Operator: lx.Token{Type: lx.LessThan, Value: `<`, Line: 1, Column: 14},
+						Right:    &ast.Atom{Type: lx.Int, Value: `3`},
+					},
+				},
+				Body: &ast.Block{},
+			},
+		},
+		{
+			name:        `only booleanable expressions should be allowed between &&`,
+			input:       `if (!y && (x + 3)) {}`,
+			shouldPanic: true,
+		},
+		{
+			name:        `only booleanable expressions should be allowed between ||`,
+			input:       `if (!y || (x + 3)) {}`,
+			shouldPanic: true,
+		},
+		{
 			name:  `multi-variable evaluation with parenthesis`,
 			input: `if (x != getValue()) {}`,
 			want: &ast.If{
