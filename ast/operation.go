@@ -6,10 +6,14 @@ import (
 )
 
 // Operation represents non-binar operations like increment, decrement
-// and possibly delete
+// op-equals and possibly delete
 type Operation struct {
 	core.Expression
 	Type lexer.TokenType
+
+	// optional value of the operator if it uses one
+	// like +=, ...
+	Value core.Expression
 }
 
 func (o *Operation) String() string {

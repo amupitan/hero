@@ -253,7 +253,7 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 
 	e := p.parse_binary(b, my_op)
 
-	if op.Type == lx.Assign {
+	if isBinaryAssgnmentToken(op.Type) {
 		return p.parse_assignment(e)
 	}
 
@@ -261,13 +261,25 @@ func (p *Parser) parse_binary(left core.Expression, my_op *lx.TokenType) core.Ex
 }
 
 // parse_assignment parses an assigment expression
+// TODO(DEV) split into one that takes in an atom and another a binary
 func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 	switch a := e.(type) {
 	case *ast.Binary:
-		// TODO(DEV) check that b.Left is an identifier
+		if !isIdentifier(a.Left) {
+			break
+		}
+		var value core.Expression
+
+		// if it is a pure assignment, then the right side is the value
+		if a.Operator.Type == lx.Assign {
+			value = a.Right
+		} else {
+			// it is an operation assignment
+			value = &ast.Operation{Type: a.Operator.Type, Value: a.Right}
+		}
 		return &ast.Assignment{
 			Identifier: a.Left.String(),
-			Value:      a.Right,
+			Value:      value,
 		}
 	case *ast.Atom:
 		if a.Type == lx.Identifier {
@@ -279,10 +291,26 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 		}
 	}
 	// TODO(DEV) find a better way to take care of invalid states
-	report(`Cannot assign variable to an assignment`)
+	report(`Cannot assign value to non-identifier`)
 
 	// report panics so this will never be hit
 	return nil
+}
+
+// isIdentifier returns true if an expression is an identifier
+// TODO(DEV) there should be a Type() in core.Expression interface instead
+func isIdentifier(e core.Expression) bool {
+	if id, ok := e.(*ast.Atom); ok {
+		return id.Type == lx.Identifier
+	}
+	return false
+}
+
+// isAssgnmentToken returns true if the token type
+// is an assignment that can be used in a binary expression
+func isBinaryAssgnmentToken(t lx.TokenType) bool {
+	return t == lx.Assign || t == lx.PlusEq || t == lx.MinusEq ||
+		t == lx.TimesEq || t == lx.DivEq || t == lx.ModEq
 }
 
 // parse_block parses a block surrounded by braces

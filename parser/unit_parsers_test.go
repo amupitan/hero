@@ -600,7 +600,7 @@ func TestParser_parse_return(t *testing.T) {
 		},
 		{
 			name:  `multi-type return`,
-			input: `return isValid, "yea!", func(){}, 5.3e-9, true`, //TODO(TEST) add a bool to the returned things
+			input: `return isValid, "yea!", func(){}, 5.3e-9, true`,
 			want: &ast.Return{Values: []core.Expression{
 				&ast.Atom{Type: lx.Identifier, Value: `isValid`},
 				&ast.Atom{Type: lx.String, Value: `yea!`},

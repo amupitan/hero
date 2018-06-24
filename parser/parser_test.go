@@ -365,6 +365,66 @@ func TestParser_parse_binary(t *testing.T) {
 				Value:      &ast.Operation{Type: lx.Decrement},
 			},
 		},
+		{
+			name:   "integer plus-assignment",
+			fields: fields{"a += 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Operation{
+					Type:  lx.PlusEq,
+					Value: &ast.Atom{Value: `4`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:   "integer times-assignment",
+			fields: fields{"a *= 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Operation{
+					Type:  lx.TimesEq,
+					Value: &ast.Atom{Value: `4`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:   "integer div-assignment",
+			fields: fields{"a /= 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Operation{
+					Type:  lx.DivEq,
+					Value: &ast.Atom{Value: `4`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:   "integer minus-assignment",
+			fields: fields{"a -= 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Operation{
+					Type:  lx.MinusEq,
+					Value: &ast.Atom{Value: `4`, Type: lx.Int},
+				},
+			},
+		},
+		{
+			name:   "integer mod-assignment",
+			fields: fields{"a %= 4", 1},
+			args:   args{left: &ast.Atom{Value: `a`, Type: lx.Identifier}, my_op: nil},
+			want: &ast.Assignment{
+				Identifier: `a`,
+				Value: &ast.Operation{
+					Type:  lx.ModEq,
+					Value: &ast.Atom{Value: `4`, Type: lx.Int},
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
