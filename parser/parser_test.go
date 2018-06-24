@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -16,15 +15,13 @@ func expressionEqual(exp1, exp2 core.Expression) bool {
 	return exp1.String() == exp2.String()
 }
 
+// expectPanic fails a test if there was no panic
+// it is used as a defer
 func expectPanic(t *testing.T, want interface{}) {
-	// strings are used here because a nil comparison
-	// can't be used
-	// see: https://golang.org/doc/faq#nil_error
-	null, wantStr := fmt.Sprint(nil), fmt.Sprint(want)
-	if r := recover(); wantStr == null && r != nil {
-		// TODO(TEST) compare panic message
-	} else if wantStr != null && r != nil {
-		t.Errorf("Unexpected panic: %s", r.(error).Error())
+	if r := recover(); r != nil {
+		// TODO(TEST) compare panic message with want
+	} else {
+		t.Errorf(`Expected a panic but there was no panic`)
 	}
 }
 
@@ -257,10 +254,9 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 			}},
 		},
 		{
-			name:        `short variable declaration with invalid syntax`,
-			input:       `foo 0`,
-			want:        nil,
-			shouldPanic: true,
+			name:  `short variable declaration with invalid syntax`,
+			input: `foo 0`,
+			want:  nil,
 		},
 	}
 	for _, tt := range tests {
