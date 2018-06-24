@@ -18,6 +18,7 @@ const (
 	Identifier TokenType = "identifier"
 	Int        TokenType = "int"
 	Float      TokenType = "float"
+	LoopName   TokenType = "loopName"
 	String     TokenType = "string"
 	RawString  TokenType = "rstring"
 	Rune       TokenType = "rune"

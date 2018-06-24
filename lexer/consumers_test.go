@@ -373,6 +373,18 @@ func TestLexer_recognizeLiteral(t *testing.T) {
 			wantPosition: 4,
 		},
 		{
+			name:         `consume identifier`,
+			input:        `foo`,
+			want:         Token{Column: 1, Line: 1, Type: Identifier, Value: `foo`},
+			wantPosition: 3,
+		},
+		{
+			name:         `consume loop name`,
+			input:        `foo:`,
+			want:         Token{Column: 1, Line: 1, Type: LoopName, Value: `foo`},
+			wantPosition: 4,
+		},
+		{
 			name:         `consume false literal`,
 			input:        `false`,
 			want:         Token{Column: 1, Line: 1, Type: Bool, Value: `false`},

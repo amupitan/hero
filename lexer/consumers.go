@@ -352,10 +352,18 @@ func (l *Lexer) consumeIdentifierOrKeyword() Token {
 		Type = Underscore
 	}
 
+	col := l.Column
+
+	// check for colon after identifier
+	if next := len(word) + l.position; next < len(l.input) && l.input[next] == ':' {
+		Type = LoopName
+		l.move()
+	}
+
 	return Token{
 		Type:   Type,
 		Value:  word,
-		Column: l.Column,
+		Column: col,
 		Line:   l.Line,
 	}
 }
