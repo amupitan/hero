@@ -5,6 +5,7 @@ import (
 )
 
 type Loop interface {
+	core.Expression
 	// evaluate enforces that only ForLoop
 	// and RangeLoop implement this interface
 	evaluate()
@@ -14,6 +15,9 @@ type Loop interface {
 // about a parsed AST Loop node
 type ForLoop struct {
 	core.Statement
+
+	// The name of the loop if it is named
+	Name string
 
 	// PreLoop is the expression ran before a loop starts
 	PreLoop core.Expression
@@ -36,6 +40,9 @@ func (l *ForLoop) evaluate() {}
 
 // RangeLoop represents a for-range loop
 type RangeLoop struct {
+	// The name of the loop if it is named
+	Name string
+
 	// First represents the first identifier in a range for loop
 	First string
 

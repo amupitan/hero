@@ -606,7 +606,10 @@ func TestParser_parse_loop(t *testing.T) {
 			name:  `popular loop - implied types`,
 			input: `for i := 0; i < s.length(); i++ {}`,
 			want: &ast.ForLoop{
-				PreLoop: &ast.Assignment{Identifier: `i`, Value: &ast.Atom{Type: lx.Int, Value: `0`}},
+				PreLoop: &ast.Definition{
+					Name:  `i`,
+					Value: &ast.Atom{Type: lx.Int, Value: `0`},
+				},
 				Condition: &ast.Binary{
 					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
 					Operator: lx.Token{Type: lx.LessThan, Value: `<`, Line: 1, Column: 15},
@@ -655,7 +658,7 @@ func TestParser_parse_loop(t *testing.T) {
 			want: &ast.ForLoop{
 				Condition: &ast.Binary{
 					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
-					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 7},
+					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 8},
 					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
 				},
 				Body: &ast.Block{},
@@ -663,7 +666,7 @@ func TestParser_parse_loop(t *testing.T) {
 		},
 		{
 			name:  `for loop with initial statement and condition`,
-			input: `for i = 0; i < 4; {}`,
+			input: `for i = 0; i > 4; {}`,
 			want: &ast.ForLoop{
 				PreLoop: &ast.Assignment{Identifier: `i`, Value: &ast.Atom{Type: lx.Int, Value: `0`}},
 				Condition: &ast.Binary{
@@ -735,7 +738,7 @@ func TestParser_parse_loop(t *testing.T) {
 				defer expectPanic(t, nil)
 			}
 			if got := p.parse_loop(); !reflect.DeepEqual(got, tt.want) {
-				// t.Errorf("Parser.parse_loop() = %v, want %v", got, tt.want)
+				t.Errorf("Parser.parse_loop() = %v, want %v", got, tt.want)
 			}
 		})
 	}

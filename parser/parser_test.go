@@ -168,6 +168,18 @@ func TestParser_parse_statement(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  `parse for loop`,
+			input: `for i == j {}`,
+			want: &ast.ForLoop{
+				Condition: &ast.Binary{
+					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 7},
+					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+				},
+				Body: &ast.Block{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

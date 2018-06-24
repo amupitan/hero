@@ -21,6 +21,7 @@ func (p *Parser) parse_statement() core.Statement {
 	t := p.peek()
 	switch t.Type {
 	case lx.For:
+		return p.parse_loop()
 	case lx.Func:
 		return p.parse_func(false)
 	case lx.If:
@@ -495,8 +496,59 @@ func (p *Parser) parse_loop() ast.Loop {
 	if rl := p.attempt_parse_range_loop(); rl != nil {
 		return rl
 	}
+	// 'for' token is already consumed
 
-	return nil
+	var preLoop, condition, postIter core.Expression
+
+	// if loop has no statements then parse the body
+	if p.nextIs(lx.LeftBrace) {
+		return &ast.ForLoop{Body: p.parse_block()}
+	}
+
+	// if a stement exists before the first semicolon
+	// then it is the preLoop statement
+	if !p.nextIs(lx.SemiColon) {
+		if d := p.attempt_parse_definition(); d != nil {
+			preLoop = d
+		} else {
+			preLoop = p.parse_expression()
+		}
+	}
+
+	// if there's only one statement in the loop, then
+	// it's a condition-only loop and we're done
+	if !p.nextIs(lx.SemiColon) {
+		return &ast.ForLoop{
+			Condition: preLoop,
+			Body:      p.parse_block(),
+		}
+	}
+
+	// consume semicolon
+	p.next()
+
+	// check if there's a condition statement before the
+	// next semicolon
+	if !p.nextIs(lx.SemiColon) {
+		// parse condition
+		condition = p.parse_expression()
+	}
+
+	// consume semicolon
+	p.expect(lx.SemiColon)
+
+	// check if there's more tokens before the body's brace
+	if !p.nextIs(lx.LeftBrace) {
+		postIter = p.parse_expression()
+	}
+
+	// parse_body:
+	return &ast.ForLoop{
+		PreLoop:       preLoop,
+		Condition:     condition,
+		PostIteration: postIter,
+		Body:          p.parse_block(),
+	}
 }
 
 func (p *Parser) attempt_parse_range_loop() *ast.RangeLoop {
