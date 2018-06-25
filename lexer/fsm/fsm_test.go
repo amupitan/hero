@@ -7,14 +7,13 @@ import (
 
 func TestFSM_Run(t *testing.T) {
 	type fields struct {
-		states       map[State]struct{}
+		states       []State
 		initial      State
 		getNextState Transition
 	}
 	type args struct {
 		input []rune
 	}
-	empty := struct{}{}
 	state1, state2 := State{1, true}, State{2, true}
 	mockNextState := func(current State, input rune) State {
 		value := int(input - '0')
@@ -31,7 +30,7 @@ func TestFSM_Run(t *testing.T) {
 		{
 			"one state",
 			fields{
-				states:       map[State]struct{}{state1: empty, state2: empty},
+				states:       []State{state1, state2},
 				initial:      state1,
 				getNextState: mockNextState,
 			},
@@ -39,14 +38,25 @@ func TestFSM_Run(t *testing.T) {
 			[]rune("1 + 2"),
 			true,
 		},
+		{
+			"null state",
+			fields{
+				states:       []State{state1, NullState},
+				initial:      state1,
+				getNextState: func(current State, input rune) State { return NullState },
+			},
+			args{[]rune(`doesn't matter`)},
+			[]rune(``),
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := &FSM{
-				states:       tt.fields.states,
-				initial:      tt.fields.initial,
-				getNextState: tt.fields.getNextState,
-			}
+			f := New(
+				tt.fields.states,
+				tt.fields.initial,
+				tt.fields.getNextState,
+			)
 			got, got1 := f.Run(tt.args.input)
 			if !reflect.DeepEqual(got.String(), string(tt.want)) {
 				t.Errorf("FSM.Run() got = %v, want %v", got.String(), string(tt.want))
