@@ -4,7 +4,22 @@ import "strings"
 
 type Expression interface {
 	Statement
+	Type() ExpressionType
 }
+
+type ExpressionType int16
+
+const (
+	Nil ExpressionType = iota
+	AssignmentNode
+	AtomNode
+	BinaryNode
+	CallNode
+	FunctionNode
+	OperationNode
+	StringNode
+	ValueNode
+)
 
 func StringifyExpressions(exps []Expression) string {
 	s := strings.Builder{}
