@@ -869,3 +869,44 @@ func TestParser_parse_loop_range(t *testing.T) {
 		})
 	}
 }
+
+func TestParser_parse_toplevel(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  core.Statement
+	}{
+		{
+			name: `parse program`,
+			input: `
+			var x int
+			x = 3 + 2
+			return x
+			`,
+			want: &ast.Program{
+				Body: &ast.Block{
+					Statements: []core.Statement{
+						&ast.Definition{Name: `x`, Type: `int`},
+						&ast.Assignment{
+							Identifier: `x`,
+							Value: &ast.Binary{
+								Left:     &ast.Atom{Type: lx.Int, Value: `3`},
+								Operator: lx.Token{Type: lx.Plus, Value: `+`, Line: 3, Column: 10},
+								Right:    &ast.Atom{Type: lx.Int, Value: `2`},
+							},
+						},
+						&ast.Return{Values: []core.Expression{&ast.Atom{Value: `x`, Type: lx.Identifier}}},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := New(tt.input)
+			if got := p.parse_toplevel(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Parser.parse_toplevel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -10,8 +10,12 @@ import (
 // parse_toplevel parses out the body of the program
 func (p *Parser) parse_toplevel() core.Statement {
 	var statements []core.Statement
-	for t := p.peek(); t != nil && t.Type != lx.Unknown; {
+
+	p.skipNewLines()
+	// TODO(CLEAN) remove check for unknown, it shouldn't get here
+	for t := p.peek(); t != nil && t.Type != lx.Unknown && t.Type != lx.EndOfInput; t = p.peek() {
 		statements = append(statements, p.parse_statement())
+		p.skipNewLines()
 	}
 	return &ast.Program{Body: &ast.Block{
 		Statements: statements,
