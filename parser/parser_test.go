@@ -10,11 +10,6 @@ import (
 	"github.com/amupitan/hero/types"
 )
 
-func expressionEqual(exp1, exp2 core.Expression) bool {
-	// TODO(DEV) add Equals(expression) to core.Exp and use it here
-	return exp1.String() == exp2.String()
-}
-
 // expectPanic fails a test if there was no panic
 // it is used as a defer
 func expectPanic(t *testing.T, want interface{}) {
@@ -36,10 +31,10 @@ func TestParser_parse_expression(t *testing.T) {
 			input: "1+2*3",
 			want: &ast.Binary{
 				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
-				Operator: lx.Token{Value: `+`, Type: lx.Plus},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
 				Right: &ast.Binary{
 					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
-					Operator: lx.Token{Value: `*`, Type: lx.Times},
+					Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 4},
 					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
 				},
 			},
@@ -50,10 +45,10 @@ func TestParser_parse_expression(t *testing.T) {
 			want: &ast.Binary{
 				Left: &ast.Binary{
 					Left:     &ast.Atom{Value: `1`, Type: lx.Int},
-					Operator: lx.Token{Value: `+`, Type: lx.Plus},
+					Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 3},
 					Right:    &ast.Atom{Value: `2`, Type: lx.Int},
 				},
-				Operator: lx.Token{Value: `*`, Type: lx.Times},
+				Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 6},
 				Right:    &ast.Atom{Value: `3`, Type: lx.Int},
 			},
 		},
@@ -61,7 +56,7 @@ func TestParser_parse_expression(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
-			if got := p.parse_expression(); !expressionEqual(got, tt.want) {
+			if got := p.parse_expression(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.parse_expression() = %s,\n want %s", got, tt.want)
 			}
 		})
