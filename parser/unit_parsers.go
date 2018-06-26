@@ -13,7 +13,9 @@ func (p *Parser) parse_toplevel() core.Statement {
 	for t := p.peek(); t != nil && t.Type != lx.Unknown; {
 		statements = append(statements, p.parse_statement())
 	}
-	return &ast.Program{Statements: statements}
+	return &ast.Program{Body: &ast.Block{
+		Statements: statements,
+	}}
 }
 
 // parse_statement parses a statement. It can parse any statement

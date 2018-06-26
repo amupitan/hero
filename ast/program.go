@@ -4,9 +4,9 @@ import "github.com/amupitan/hero/ast/core"
 
 type Program struct {
 	core.Statement
-	Statements []core.Statement
+	Body *Block
 }
 
 func (p *Program) String() string {
-	return `program`
+	return `program: ` + p.Body.String()
 }
