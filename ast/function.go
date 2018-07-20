@@ -4,35 +4,35 @@ import (
 	"strings"
 
 	"github.com/amupitan/hero/ast/core"
+	lx "github.com/amupitan/hero/lexer"
 	"github.com/amupitan/hero/types"
 )
 
 type funcBody struct{}
 
 type Param struct {
-	Name string
-	Type types.Type
+	Name lx.Token
+	Type lx.Token
 }
 
 type Function struct {
-	core.Expression
 	Definition
 	Parameters  []*Param
 	Lambda      bool
-	ReturnTypes []types.Type
+	ReturnTypes []lx.Token
 	Body        *Block
-	Owner       types.Type
+	Owner       lx.Token
 	Private     bool
 }
 
 func (p Param) String() string {
-	return p.Name + ` ` + p.Type.String()
+	return p.Name.Value + ` ` + p.Type.Value
 }
 
 func (f *Function) String() string {
-	s := `func ` + f.Name + `(` + stringifyParams(f.Parameters) + `)`
+	s := `func ` + f.Name.Value + `(` + stringifyParams(f.Parameters) + `)`
 	if len(f.ReturnTypes) > 0 {
-		s += ` (` + stringifyTypes(f.ReturnTypes) + `)`
+		s += ` (` + stringifyTokens(f.ReturnTypes) + `)`
 	}
 	return s + ` {}`
 }
@@ -64,4 +64,37 @@ func stringifyTypes(types_ []types.Type) string {
 	}
 
 	return s.String()
+}
+
+func stringifyTokens(tokens []lx.Token) string {
+	s := strings.Builder{}
+	for i, t := range tokens {
+		s.WriteString(t.Value)
+
+		// write comma if not last exp
+		if i+1 < len(tokens) {
+			s.WriteString(`, `)
+		}
+	}
+
+	return s.String()
+}
+
+func (f *Function) Type() core.ExpressionType {
+	return core.FunctionNode
+}
+
+type Param_ struct {
+	Name string
+	Type types.Type
+}
+
+type Function_ struct {
+	Definition
+	Parameters  []*Param_
+	Lambda      bool
+	ReturnTypes []types.Type
+	Body        *Block
+	Owner       types.Type
+	Private     bool
 }

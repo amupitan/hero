@@ -7,7 +7,6 @@ import (
 )
 
 type Call struct {
-	core.Expression
 	Name    string // TODO: take in complete token?
 	Args    []core.Expression
 	Object  string
@@ -34,4 +33,8 @@ func (c *Call) String() string {
 	s.WriteRune(')')
 
 	return s.String()
+}
+
+func (c *Call) Type() core.ExpressionType {
+	return core.CallNode
 }

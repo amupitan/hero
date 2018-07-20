@@ -116,18 +116,18 @@ func (p *Parser) attempt_parse_named_call(isNegated bool) *ast.Call {
 
 // attempt_parse_definition attempts to parse a definition or returns nil if it can't be parsed
 func (p *Parser) attempt_parse_definition() *ast.Definition {
-	var name, Type string
+	var name, Type *lx.Token
 	var value core.Expression
 	if p.accept(lx.Var) {
 		// consume var keyword
 		p.next()
 
 		// consume identifier name
-		name = p.expect(lx.Identifier).Value
+		name = p.expect(lx.Identifier)
 
 		// check if type is present
 		if p.accept(lx.Identifier) {
-			Type = p.next().Value
+			Type = p.next()
 
 			// consume value if assign token is present
 			if p.accept(lx.Assign) {
@@ -146,7 +146,7 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 	} else if p.accept(lx.Identifier) {
 		if lookahead := p.lookahead(); lookahead != nil && lookahead.Type == lx.Declare {
 			// consume identifier as name
-			name = p.next().Value
+			name = p.next()
 
 			// consume operator
 			p.next()
@@ -162,10 +162,14 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 		return nil
 	}
 
+	if Type == nil {
+		Type = &lx.Token{}
+	}
+
 	return &ast.Definition{
-		Name:  name,
-		Value: value,
-		Type:  Type,
+		Name:      *name,
+		Value:     value,
+		LexerType: *Type,
 	}
 }
 
@@ -211,8 +215,7 @@ func (p *Parser) parse_atom() core.Expression {
 
 	// TODO: allow functions
 	return &ast.Atom{
-		Type:    t.Type,
-		Value:   t.Value,
+		Token:   *t,
 		Negated: isNegated,
 	}
 }
@@ -281,18 +284,18 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 			value = a.Right
 		} else {
 			// it is an operation assignment
-			value = &ast.Operation{Type: a.Operator.Type, Value: a.Right}
+			value = &ast.Operation{Token: a.Operator, Value: a.Right}
 		}
 		return &ast.Assignment{
 			Identifier: a.Left.String(),
 			Value:      value,
 		}
 	case *ast.Atom:
-		if a.Type == lx.Identifier {
+		if a.Token.Type == lx.Identifier {
 			t := p.expectsOneOf(lx.Increment, lx.Decrement)
 			return &ast.Assignment{
 				Identifier: a.Value,
-				Value:      &ast.Operation{Type: t.Type},
+				Value:      &ast.Operation{Token: *t},
 			}
 		}
 	}
@@ -307,7 +310,7 @@ func (p *Parser) parse_assignment(e core.Expression) core.Expression {
 // TODO(DEV) there should be a Type() in core.Expression interface instead
 func isIdentifier(e core.Expression) bool {
 	if id, ok := e.(*ast.Atom); ok {
-		return id.Type == lx.Identifier
+		return id.Token.Type == lx.Identifier
 	}
 	return false
 }
@@ -348,13 +351,13 @@ func (p *Parser) parse_block() *ast.Block {
 // parse_func parses a function
 func (p *Parser) parse_func(lamdba bool) *ast.Function {
 
-	var name string
+	var name *lx.Token
 	// consume func
 	p.expect(lx.Func)
 
 	// consume function name if not lambda
 	if !lamdba {
-		name = p.expect(lx.Identifier).Value
+		name = p.expect(lx.Identifier)
 	}
 
 	// get function parameters
@@ -396,8 +399,8 @@ func (p *Parser) parse_func(lamdba bool) *ast.Function {
 
 	return &ast.Function{
 		Definition: ast.Definition{
-			Name: name,
-			Type: types.Func.String(), // TODO(DEV) remove String() caller
+			Name: *name,
+			// LexerType: types.Func.String(), // TODO(DEV) remove String() caller
 		},
 		Parameters:  params,
 		Body:        body,
@@ -735,7 +738,7 @@ func isBooleanBinaryExpr(op lx.TokenType) bool {
 func isBooleanExpr(e core.Expression) bool {
 	switch exp := e.(type) {
 	case *ast.Atom:
-		return exp.Type == lx.Bool || exp.Type == lx.Identifier
+		return exp.Token.Type == lx.Bool || exp.Token.Type == lx.Identifier
 	case *ast.Binary:
 		return isBooleanBinaryExpr(exp.Operator.Type)
 	case *ast.Call:

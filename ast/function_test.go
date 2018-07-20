@@ -19,7 +19,6 @@ func TestFunction_String(t *testing.T) {
 	f := &Function{
 		Definition: Definition{
 			Name: `print`,
-			Type: types.Func.String(),
 		},
 		Parameters:  []*Param{&Param{Name: `firstname`, Type: types.String}, &Param{Name: `id`, Type: types.Int}},
 		Lambda:      false,

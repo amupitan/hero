@@ -1,8 +1,11 @@
 package parser
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/kylelemons/godebug/pretty"
 
 	"github.com/amupitan/hero/ast"
 	"github.com/amupitan/hero/ast/core"
@@ -20,6 +23,11 @@ func expectPanic(t *testing.T, want interface{}) {
 	}
 }
 
+// createToken creates a token for testing purposes
+func createToken(Type lx.TokenType, value string, line, col int) lx.Token {
+	return lx.Token{Type: Type, Value: value, Line: line, Column: col}
+}
+
 func TestParser_parse_expression(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -30,12 +38,12 @@ func TestParser_parse_expression(t *testing.T) {
 			name:  "integer addition and multiplication",
 			input: "1+2*3",
 			want: &ast.Binary{
-				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+				Left:     &ast.Atom{Token: createToken(lx.Int, `1`, 1, 1)},
 				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
 				Right: &ast.Binary{
-					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
+					Left:     &ast.Atom{Token: createToken(lx.Int, `2`, 1, 3)},
 					Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 4},
-					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `3`, 1, 5)},
 				},
 			},
 		},
@@ -44,12 +52,12 @@ func TestParser_parse_expression(t *testing.T) {
 			input: "(1+2)*3",
 			want: &ast.Binary{
 				Left: &ast.Binary{
-					Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+					Left:     &ast.Atom{Token: createToken(lx.Int, `1`, 1, 2)},
 					Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 3},
-					Right:    &ast.Atom{Value: `2`, Type: lx.Int},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `2`, 1, 4)},
 				},
 				Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 6},
-				Right:    &ast.Atom{Value: `3`, Type: lx.Int},
+				Right:    &ast.Atom{Token: createToken(lx.Int, `3`, 1, 7)},
 			},
 		},
 	}
@@ -73,28 +81,33 @@ func TestParser_parse_statement(t *testing.T) {
 		{
 			`parse var`,
 			`var foo int = 0`,
-			&ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			&ast.Definition{
+				Name:      createToken(lx.Identifier, `foo`, 1, 5),
+				LexerType: createToken(lx.Identifier, `int`, 1, 9),
+				Value:     &ast.Atom{Token: createToken(lx.Int, `0`, 1, 15)},
+			},
 			false,
 		},
 		{
 			name:  `parse definition`,
 			input: `x := y + 2`,
-			want: &ast.Definition{Name: `x`, Value: &ast.Binary{
-				Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
-				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
-				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
-			}},
+			want: &ast.Definition{Name: createToken(lx.Identifier, `x`, 1, 1),
+				Value: &ast.Binary{
+					Left:     &ast.Atom{Token: createToken(lx.Identifier, `y`, 1, 6)},
+					Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `2`, 1, 10)},
+				}},
 		},
 		{
 			name:  "parse expression",
 			input: "1+2*3",
 			want: &ast.Binary{
-				Left:     &ast.Atom{Value: `1`, Type: lx.Int},
+				Left:     &ast.Atom{Token: createToken(lx.Int, `1`, 1, 1)},
 				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 2},
 				Right: &ast.Binary{
-					Left:     &ast.Atom{Value: `2`, Type: lx.Int},
+					Left:     &ast.Atom{Token: createToken(lx.Int, `2`, 1, 3)},
 					Operator: lx.Token{Value: `*`, Type: lx.Times, Line: 1, Column: 4},
-					Right:    &ast.Atom{Value: `3`, Type: lx.Int},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `3`, 1, 5)},
 				},
 			},
 		},
@@ -102,7 +115,9 @@ func TestParser_parse_statement(t *testing.T) {
 			name:  `parse func`,
 			input: `func compute(x, y int) (int, MyType) {}`,
 			want: &ast.Function{
-				Definition:  ast.Definition{Name: `compute`, Type: string(lx.Func)},
+				Definition: ast.Definition{
+					Name: createToken(lx.Identifier, `compute`, 1, 6),
+				},
 				Parameters:  []*ast.Param{&ast.Param{Name: `x`, Type: types.Int}, &ast.Param{Name: `y`, Type: types.Int}},
 				ReturnTypes: []types.Type{types.Int, CustomType(`MyType`)},
 				Body:        &ast.Block{},
@@ -113,11 +128,13 @@ func TestParser_parse_statement(t *testing.T) {
 			input: `{x := y + 2}`,
 			want: &ast.Block{
 				Statements: []core.Statement{
-					&ast.Definition{Name: `x`, Value: &ast.Binary{
-						Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
-						Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 9},
-						Right:    &ast.Atom{Value: `2`, Type: lx.Int},
-					}},
+					&ast.Definition{
+						Name: createToken(lx.Identifier, `x`, 1, 2),
+						Value: &ast.Binary{
+							Left:     &ast.Atom{Token: createToken(lx.Identifier, `y`, 1, 7)},
+							Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 9},
+							Right:    &ast.Atom{Token: createToken(lx.Int, `2`, 1, 11)},
+						}},
 				},
 			},
 		},
@@ -125,8 +142,8 @@ func TestParser_parse_statement(t *testing.T) {
 			name:  `parse return`,
 			input: `return 1,2`,
 			want: &ast.Return{Values: []core.Expression{
-				&ast.Atom{Type: lx.Int, Value: `1`},
-				&ast.Atom{Type: lx.Int, Value: `2`},
+				&ast.Atom{Token: createToken(lx.Int, `1`, 1, 8)},
+				&ast.Atom{Token: createToken(lx.Int, `2`, 1, 10)},
 			}},
 		},
 		{
@@ -138,14 +155,14 @@ func TestParser_parse_statement(t *testing.T) {
 					}`,
 			want: &ast.If{
 				Condition: &ast.Binary{
-					Left:     &ast.Atom{Type: lx.Identifier, Value: `x`},
+					Left:     &ast.Atom{Token: createToken(lx.Identifier, `x`, 1, 4)},
 					Operator: lx.Token{Value: `>=`, Type: lx.GreaterThanOrEqual, Line: 1, Column: 6},
-					Right:    &ast.Atom{Type: lx.Int, Value: `4`},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `4`, 1, 9)},
 				},
 				Body: &ast.Block{
 					Statements: []core.Statement{
 						&ast.Return{
-							Values: []core.Expression{&ast.Atom{Type: lx.String, Value: `yolo`}},
+							Values: []core.Expression{&ast.Atom{Token: createToken(lx.String, `yolo`, 2, 14)}},
 						},
 					},
 				},
@@ -153,7 +170,7 @@ func TestParser_parse_statement(t *testing.T) {
 					Body: &ast.Block{
 						Statements: []core.Statement{
 							&ast.Return{
-								Values: []core.Expression{&ast.Atom{Type: lx.String, Value: `dope`}},
+								Values: []core.Expression{&ast.Atom{Token: createToken(lx.String, `dope`, 4, 14)}},
 							},
 						},
 					},
@@ -165,9 +182,9 @@ func TestParser_parse_statement(t *testing.T) {
 			input: `for i == j {}`,
 			want: &ast.ForLoop{
 				Condition: &ast.Binary{
-					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Left:     &ast.Atom{Token: createToken(lx.Identifier, `i`, 1, 5)},
 					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 1, Column: 7},
-					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+					Right:    &ast.Atom{Token: createToken(lx.Identifier, `j`, 1, 10)},
 				},
 				Body: &ast.Block{},
 			},
@@ -179,9 +196,9 @@ func TestParser_parse_statement(t *testing.T) {
 			want: &ast.ForLoop{
 				Name: `flex`,
 				Condition: &ast.Binary{
-					Left:     &ast.Atom{Type: lx.Identifier, Value: `i`},
+					Left:     &ast.Atom{Token: createToken(lx.Identifier, `i`, 2, 8)},
 					Operator: lx.Token{Type: lx.Equal, Value: `==`, Line: 2, Column: 10},
-					Right:    &ast.Atom{Type: lx.Identifier, Value: `j`},
+					Right:    &ast.Atom{Token: createToken(lx.Identifier, `j`, 2, 13)},
 				},
 				Body: &ast.Block{},
 			},
@@ -194,6 +211,7 @@ func TestParser_parse_statement(t *testing.T) {
 				defer expectPanic(t, nil)
 			}
 			if got := p.parse_statement(); !reflect.DeepEqual(got, tt.want) {
+				fmt.Println(pretty.Compare(got, tt.want))
 				t.Errorf("Parser.parse_statement() = %v, want %v", got, tt.want)
 			}
 		})
@@ -210,17 +228,27 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 		{
 			name:  `variable declaration with type and value`,
 			input: `var foo int = 0`,
-			want:  &ast.Definition{Name: `foo`, Type: `int`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			want: &ast.Definition{
+				Name:      createToken(lx.Identifier, `foo`, 1, 5),
+				LexerType: createToken(lx.Identifier, `int`, 1, 9),
+				Value:     &ast.Atom{Token: createToken(lx.Int, `0`, 1, 15)},
+			},
 		},
 		{
 			name:  `variable declaration with value`,
 			input: `var bar = "hello"`,
-			want:  &ast.Definition{Name: `bar`, Value: &ast.Atom{Value: `hello`, Type: lx.String}},
+			want: &ast.Definition{
+				Name:  createToken(lx.Identifier, `bar`, 1, 5),
+				Value: &ast.Atom{Token: createToken(lx.String, `hello`, 1, 11)},
+			},
 		},
 		{
 			name:  `variable declaration with type`,
 			input: `var foobar int`,
-			want:  &ast.Definition{Name: `foobar`, Type: `int`},
+			want: &ast.Definition{
+				Name:      createToken(lx.Identifier, `foobar`, 1, 5),
+				LexerType: createToken(lx.Identifier, `int`, 1, 12),
+			},
 		},
 		{
 			name:        `variable declaration with no type or value`,
@@ -237,16 +265,21 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 		{
 			name:  `short variable declaration with type and value`,
 			input: `foo := 0`,
-			want:  &ast.Definition{Name: `foo`, Value: &ast.Atom{Value: `0`, Type: lx.Int}},
+			want: &ast.Definition{
+				Name:  createToken(lx.Identifier, `foo`, 1, 1),
+				Value: &ast.Atom{Token: createToken(lx.Int, `0`, 1, 8)},
+			},
 		},
 		{
 			name:  `short variable declaration to expression with type and value`,
 			input: `x := y + 2`,
-			want: &ast.Definition{Name: `x`, Value: &ast.Binary{
-				Left:     &ast.Atom{Value: `y`, Type: lx.Identifier},
-				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
-				Right:    &ast.Atom{Value: `2`, Type: lx.Int},
-			}},
+			want: &ast.Definition{
+				Name: createToken(lx.Identifier, `x`, 1, 1),
+				Value: &ast.Binary{
+					Left:     &ast.Atom{Token: createToken(lx.Identifier, `y`, 1, 6)},
+					Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 8},
+					Right:    &ast.Atom{Token: createToken(lx.Int, `2`, 1, 10)},
+				}},
 		},
 		{
 			name:  `short variable declaration with invalid syntax`,
@@ -261,12 +294,14 @@ func TestParser_attempt_parse_definition(t *testing.T) {
 				defer expectPanic(t, nil)
 			}
 			if got := p.attempt_parse_definition(); !reflect.DeepEqual(got, tt.want) {
+				fmt.Println(pretty.Compare(got, tt.want))
 				t.Errorf("Parser.attempt_parse_definition() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
+/*
 func TestParser_parse_binary(t *testing.T) {
 	invalid_op := lx.TokenType(`#`)
 	type fields struct {
@@ -641,3 +676,4 @@ func TestParser_parse_atom(t *testing.T) {
 		})
 	}
 }
+*/

@@ -5,7 +5,7 @@ import (
 )
 
 type Loop interface {
-	core.Expression
+	core.Statement
 	// evaluate enforces that only ForLoop
 	// and RangeLoop implement this interface
 	evaluate()

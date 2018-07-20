@@ -6,15 +6,17 @@ import (
 )
 
 type Atom struct {
-	core.Expression
-	Type    lexer.TokenType
-	Value   string
+	lexer.Token
 	Negated bool
 }
 
 func (a *Atom) String() string {
-	if a.Type == lexer.RawString {
+	if a.Token.Type == lexer.RawString {
 		return `r'` + a.Value
 	}
 	return a.Value
+}
+
+func (a *Atom) Type() core.ExpressionType {
+	return core.AtomNode
 }

@@ -11,8 +11,8 @@ import (
 func TestCall_String(t *testing.T) {
 	c := &Call{
 		Args: []core.Expression{
-			&Atom{Type: lexer.Identifier, Value: `foo`},
-			&Atom{Type: lexer.Bool, Value: `true`},
+			&Atom{Token: lexer.Token{Type: lexer.Identifier, Value: `foo`, Line: 1, Column: 1}},
+			&Atom{Token: lexer.Token{Type: lexer.Bool, Value: `true`}},
 		},
 		Name:   `print`,
 		Object: `obj`,
@@ -26,8 +26,8 @@ func TestCall_String(t *testing.T) {
 	// test lambda call
 	c = &Call{
 		Args: []core.Expression{
-			&Atom{Type: lexer.Identifier, Value: `foo`},
-			&Atom{Type: lexer.Bool, Value: `true`},
+			&Atom{Token: lexer.Token{Type: lexer.Identifier, Value: `foo`}},
+			&Atom{Token: lexer.Token{Type: lexer.Bool, Value: `true`}},
 		},
 		Func: &Function{Lambda: true, Parameters: []*Param{}, ReturnTypes: []types.Type{}},
 	}

@@ -6,7 +6,6 @@ import (
 )
 
 type Binary struct {
-	core.Expression
 	Left     core.Expression
 	Right    core.Expression
 	Operator lexer.Token
@@ -15,4 +14,8 @@ type Binary struct {
 
 func (b *Binary) String() string {
 	return `(` + b.Left.String() + b.Operator.Value + b.Right.String() + `)`
+}
+
+func (b *Binary) Type() core.ExpressionType {
+	return core.BinaryNode
 }

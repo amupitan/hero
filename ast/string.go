@@ -1,9 +1,6 @@
 package ast
 
-import "github.com/amupitan/hero/ast/core"
-
 type String struct {
-	core.Expression
 	value string
 	isRaw bool
 }

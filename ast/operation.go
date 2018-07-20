@@ -8,8 +8,7 @@ import (
 // Operation represents non-binar operations like increment, decrement
 // op-equals and possibly delete
 type Operation struct {
-	core.Expression
-	Type lexer.TokenType
+	Token lexer.Token
 
 	// optional value of the operator if it uses one
 	// like +=, ...
@@ -17,5 +16,9 @@ type Operation struct {
 }
 
 func (o *Operation) String() string {
-	return string(o.Type)
+	return o.Token.String()
+}
+
+func (o *Operation) Type() core.ExpressionType {
+	return core.OperationNode
 }
