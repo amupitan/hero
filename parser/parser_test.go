@@ -613,6 +613,11 @@ func TestParser_parse_atom(t *testing.T) {
 			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier, Negated: true},
 		},
 		{
+			name:        `negted parenthesis with non-booleanable expression`,
+			input:       `!(v = 5)`,
+			shouldPanic: true,
+		},
+		{
 			name:  `negated parenthesis with booleanable expression`,
 			input: `!(+x >= 2.8)`,
 			want: &ast.Binary{
@@ -675,6 +680,11 @@ func TestParser_parse_atom(t *testing.T) {
 		{
 			name:        `signed parenthesis with non-sign-specifiable expression`,
 			input:       `-(x >= 2.8)`,
+			shouldPanic: true,
+		},
+		{
+			name:        `signed parenthesis with non-sign-specifiable expression`,
+			input:       `-(v = 5)`,
 			shouldPanic: true,
 		},
 		{
