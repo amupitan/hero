@@ -174,8 +174,9 @@ func (l *Lexer) consumeArithmeticOrBitOperator() Token {
 		l.move()
 
 		return t
+	}
 
-	} else if !isBoolOperator(next) {
+	if !isBoolOperator(next) {
 		switch op {
 		case '+':
 			t.Type = Plus

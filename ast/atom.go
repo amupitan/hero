@@ -8,6 +8,7 @@ import (
 type Atom struct {
 	lexer.Token
 	Negated bool
+	Signed bool
 }
 
 func (a *Atom) String() string {

@@ -28,6 +28,7 @@ var precedence = map[lx.TokenType]int{
 	lx.Times: 15, lx.Div: 15, lx.Mod: 15,
 }
 
+// VALUES represents values/operands in this language
 var VALUES = []lx.TokenType{
 	lx.Identifier,
 	lx.Bool,
@@ -183,7 +184,6 @@ func (p *Parser) accept(expected lx.TokenType) bool {
 // nextIs returns true if the [expected] token type matches the next token type
 func (p *Parser) nextIs(expected lx.TokenType) bool {
 	if t := p.peek(); t != nil {
-
 		return t.Type == expected
 	}
 	return false
