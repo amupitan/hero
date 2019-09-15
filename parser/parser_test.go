@@ -440,7 +440,6 @@ func TestParser_attempt_parse_call(t *testing.T) {
 		name        string
 		input       string
 		want        core.Expression
-		isNegated   bool
 		shouldPanic bool
 	}{
 		{
@@ -472,7 +471,7 @@ func TestParser_attempt_parse_call(t *testing.T) {
 			if tt.shouldPanic {
 				defer expectPanic(t, nil)
 			}
-			if got := p.attempt_parse_call(tt.isNegated); !reflect.DeepEqual(got, tt.want) {
+			if got := p.attempt_parse_call(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_call() = %v, want %v", got, tt.want)
 			}
 		})
@@ -565,6 +564,16 @@ func TestParser_parse_atom(t *testing.T) {
 			want:  &ast.Atom{Value: `1`, Type: lx.Int},
 		},
 		{
+			name:  `sign-specified integer (minus)`,
+			input: `-1`,
+			want:  &ast.Atom{Value: `1`, Type: lx.Int, Signed: true},
+		},
+		{
+			name:  `sign-specified exponent float (plus)`,
+			input: `+1.2E-7`,
+			want:  &ast.Atom{Value: `1.2E-7`, Type: lx.Float},
+		},
+		{
 			name:  `exponent float`,
 			input: `1.2E-7`,
 			want:  &ast.Atom{Value: `1.2E-7`, Type: lx.Float},
@@ -604,6 +613,21 @@ func TestParser_parse_atom(t *testing.T) {
 			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier, Negated: true},
 		},
 		{
+			name:  `negated parenthesis with booleanable expression`,
+			input: `!(+x >= 2.8)`,
+			want: &ast.Binary{
+				Left:     &ast.Atom{Value: `x`, Type: lx.Identifier},
+				Operator: lx.Token{Value: `>=`, Type: lx.GreaterThanOrEqual, Line: 1, Column: 6},
+				Right:    &ast.Atom{Value: `2.8`, Type: lx.Float},
+				Negated:  true,
+			},
+		},
+		{
+			name:        `negated parenthesis with non-booleanable expression`,
+			input:       `!(x + 2)`,
+			shouldPanic: true,
+		},
+		{
 			name:  `negated call`,
 			input: `!isWild()`,
 			want:  &ast.Call{Name: `isWild`, Negated: true, Args: []core.Expression{}},
@@ -626,6 +650,81 @@ func TestParser_parse_atom(t *testing.T) {
 		{
 			name:        `negated literals are not allowed - float`,
 			input:       `!1.234`,
+			shouldPanic: true,
+		},
+		{
+			name:        `cannot sign and negate`,
+			input:       `-!foo`,
+			shouldPanic: true,
+		},
+		{
+			name:        `cannot negate and sign`,
+			input:       `!-foo`,
+			shouldPanic: true,
+		},
+		{
+			name:  `sign specified identifier`,
+			input: `+foo`,
+			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier},
+		},
+		{
+			name:  `signed identifier`,
+			input: `-foo`,
+			want:  &ast.Atom{Value: `foo`, Type: lx.Identifier, Signed: true},
+		},
+		{
+			name:        `signed parenthesis with non-sign-specifiable expression`,
+			input:       `-(x >= 2.8)`,
+			shouldPanic: true,
+		},
+		{
+			name:  `signed parenthesis with sign-specifiable expression`,
+			input: `-(x + -y)`,
+			want: &ast.Binary{
+				Left:     &ast.Atom{Value: `x`, Type: lx.Identifier},
+				Operator: lx.Token{Value: `+`, Type: lx.Plus, Line: 1, Column: 5},
+				Right:    &ast.Atom{Value: `y`, Type: lx.Identifier, Signed: true},
+				Signed:   true,
+			},
+		},
+		{
+			name:  `sign specified  call`,
+			input: `+isWild()`,
+			want:  &ast.Call{Name: `isWild`, Args: []core.Expression{}},
+		},
+		{
+			name:  `signed call`,
+			input: `-isWild()`,
+			want:  &ast.Call{Name: `isWild`, Signed: true, Args: []core.Expression{}},
+		},
+		{
+			name:  `signed object call`,
+			input: `-foo.print(1, "hello")`,
+			want: &ast.Call{
+				Name:   `print`,
+				Args:   []core.Expression{&ast.Atom{Type: `int`, Value: `1`}, &ast.Atom{Type: `string`, Value: `hello`}},
+				Object: `foo`,
+				Signed: true,
+			},
+		},
+		{
+			name:        `signed literals are not allowed - string`,
+			input:       `-"nope"`,
+			shouldPanic: true,
+		},
+		{
+			name:        `signed literals are not allowed - bool`,
+			input:       `-true`,
+			shouldPanic: true,
+		},
+		{
+			name:        `signed literals are not allowed - runes`,
+			input:       `-'L'`,
+			shouldPanic: true,
+		},
+		{
+			name:        `signed literals are not allowed - underscore`,
+			input:       `-_`,
 			shouldPanic: true,
 		},
 	}

@@ -10,6 +10,7 @@ type Atom struct {
 	Type    lexer.TokenType
 	Value   string
 	Negated bool
+	Signed bool
 }
 
 func (a *Atom) String() string {

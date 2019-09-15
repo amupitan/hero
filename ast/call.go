@@ -13,6 +13,7 @@ type Call struct {
 	Object  string
 	Func    *Function
 	Negated bool
+	Signed bool
 }
 
 func (c *Call) String() string {

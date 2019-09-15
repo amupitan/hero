@@ -56,30 +56,29 @@ func (p *Parser) parse_expression() core.Expression {
 
 // attempt_parse_call attempts to parse a call or returns nil if a call can't be parsed
 // it parses a lambda function if possible
-func (p *Parser) attempt_parse_call(isNegated bool) core.Expression {
+func (p *Parser) attempt_parse_call() core.Expression {
 
 	if p.accept(lx.Identifier) {
 		// This can't simply be changed to return p.attempt_parse_named_call()
 		// because p.attempt_parse_named_call() can never return nil since
 		// it has a type. See: https://golang.org/doc/faq#nil_error
-		if c := p.attempt_parse_named_call(isNegated); c != nil {
+		if c := p.attempt_parse_named_call(); c != nil {
 			return c
 		}
 		return nil
 	}
-	return p.attempt_parse_lambda_call(isNegated)
+	return p.attempt_parse_lambda_call()
 }
 
 // attempt_parse_lambda_call attempts to parse a call
 // from a lambda expression, returns the lambda expression
 // if it is not call or panics if neither is possible
-func (p *Parser) attempt_parse_lambda_call(isNegated bool) core.Expression {
+func (p *Parser) attempt_parse_lambda_call() core.Expression {
 	f := p.parse_func(true)
 	if t := p.peek(); t.Type == lx.LeftParenthesis {
 		return &ast.Call{
-			Args:    p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, nil),
-			Func:    f,
-			Negated: isNegated,
+			Args: p.delimited(lx.LeftParenthesis, lx.RightParenthesis, lx.Comma, false, nil),
+			Func: f,
 		}
 	}
 
@@ -88,7 +87,7 @@ func (p *Parser) attempt_parse_lambda_call(isNegated bool) core.Expression {
 
 // attempt_parse_named_call attempts to parse a call
 // from an identifier
-func (p *Parser) attempt_parse_named_call(isNegated bool) *ast.Call {
+func (p *Parser) attempt_parse_named_call() *ast.Call {
 	object := ``
 	identifier := p.expect(lx.Identifier)
 	if p.nextIs(lx.Dot) {
@@ -107,10 +106,9 @@ func (p *Parser) attempt_parse_named_call(isNegated bool) *ast.Call {
 
 	// TODO: convert expression to call.params?
 	return &ast.Call{
-		Name:    identifier.Value,
-		Args:    params,
-		Object:  object,
-		Negated: isNegated,
+		Name:   identifier.Value,
+		Args:   params,
+		Object: object,
 	}
 }
 
@@ -171,11 +169,30 @@ func (p *Parser) attempt_parse_definition() *ast.Definition {
 
 // parse_atom parses out an atom - which is a literal value or identifier
 func (p *Parser) parse_atom() core.Expression {
+	isSigned := false
 	// check for negation
 	isNegated := p.accept(lx.Not)
 	if isNegated {
 		// consume negation token
 		p.next()
+	} else if p.acceptsOneOf(lx.Plus, lx.Minus) {
+		// check for specified sign (+ or -)
+		isSigned = p.nextIs(lx.Minus)
+		// consume + or - token
+		p.next()
+	}
+
+	signAndOrNegate := func(exp core.Expression) {
+		// attempt to negate if there was a negation
+		if isNegated {
+			negateExpr(exp)
+			return
+		}
+
+		// attempt to sign if there was a minus sign
+		if isSigned {
+			signExpr(exp)
+		}
 	}
 
 	// attempt to consume expression in a parenthesis
@@ -187,16 +204,14 @@ func (p *Parser) parse_atom() core.Expression {
 		// consume right paren
 		p.expect(lx.RightParenthesis)
 
-		// attempt to negate if there was a negation
-		if isNegated {
-			negateExpr(exp)
-		}
+		signAndOrNegate(exp)
 		return exp
 	}
 
 	// parse call if it is a named or lambda call
 	if p.nextIs(lx.Identifier) || p.nextIs(lx.Func) {
-		if e := p.attempt_parse_call(isNegated); e != nil {
+		if e := p.attempt_parse_call(); e != nil {
+			signAndOrNegate(e)
 			return e
 		}
 	}
@@ -209,11 +224,18 @@ func (p *Parser) parse_atom() core.Expression {
 		return nil
 	}
 
+	if isSigned && !isSignSpecifiable(t.Type) {
+		// TODO(REPORT) better message
+		report(`cannot specify sign of non-number type`)
+		return nil
+	}
+
 	// TODO: allow functions
 	return &ast.Atom{
 		Type:    t.Type,
 		Value:   t.Value,
 		Negated: isNegated,
+		Signed:  isSigned,
 	}
 }
 
@@ -720,12 +742,25 @@ func isBooleanAble(t lx.TokenType) bool {
 	return t == lx.Bool || t == lx.Identifier
 }
 
+// isSignSpecifiable returns true if the token could
+// be sign specified
+func isSignSpecifiable(t lx.TokenType) bool {
+	return t == lx.Int || t == lx.Float || t == lx.Identifier
+}
+
 // isBooleanBinaryExpr returns true if the binary
 // expression's operator is a comparator
 // i.e. ==, <, >, <=, !=
 func isBooleanBinaryExpr(op lx.TokenType) bool {
 	return op == lx.Equal || op == lx.LessThan || op == lx.GreaterThan || op == lx.LessThanOrEqual ||
 		op == lx.NotEqual || op == lx.GreaterThanOrEqual || op == lx.And || op == lx.Or
+}
+
+// isArithmeticBinaryExpr returns true if the binary
+// expression's operator is arithmetic
+// i.e. +, -, /, %
+func isArithmeticBinaryExpr(op lx.TokenType) bool {
+	return op == lx.Plus || op == lx.Minus || op == lx.Times || op == lx.Div || op == lx.Mod
 }
 
 // isBooleanExpr returns true if the expression is a
@@ -765,11 +800,32 @@ func negateExpr(e core.Expression) {
 	case *ast.Binary:
 		if isBooleanBinaryExpr(exp.Operator.Type) {
 			exp.Negated = true
+			return
 		}
+		report(`cannot negate non-boolean expression`)
 	case *ast.Call:
 		exp.Negated = true
 	default:
 		// TODO(REPORT) better message
 		report(`cannot negate non-boolean expression`)
+	}
+}
+
+// signExpr signs a negative number or call expression
+// TODO(REPORT) better message in reports
+func signExpr(e core.Expression) {
+	switch exp := e.(type) {
+	case *ast.Atom:
+		exp.Signed = true
+	case *ast.Call:
+		exp.Signed = true
+	case *ast.Binary:
+		if isArithmeticBinaryExpr(exp.Operator.Type) {
+			exp.Signed = true
+			return
+		}
+		report(`cannot specify sign of non-number expression`)
+	default:
+		report(`cannot specify sign of non-number type`)
 	}
 }

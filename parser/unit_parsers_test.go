@@ -169,10 +169,9 @@ func TestParser_parse_func(t *testing.T) {
 
 func TestParser_attempt_parse_lambda_call(t *testing.T) {
 	tests := []struct {
-		name      string
-		input     string
-		isNegated bool
-		want      core.Expression
+		name  string
+		input string
+		want  core.Expression
 	}{
 		{
 			name:  `lambda declaration`,
@@ -228,7 +227,7 @@ func TestParser_attempt_parse_lambda_call(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := New(tt.input)
-			if got := p.attempt_parse_lambda_call(tt.isNegated); !reflect.DeepEqual(got, tt.want) {
+			if got := p.attempt_parse_lambda_call(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_lambda_call() = %v, want %v", got, tt.want)
 			}
 		})
@@ -239,7 +238,6 @@ func TestParser_attempt_parse_named_call(t *testing.T) {
 	tests := []struct {
 		name        string
 		input       string
-		isNegated   bool
 		want        *ast.Call
 		shouldPanic bool
 	}{
@@ -291,7 +289,7 @@ func TestParser_attempt_parse_named_call(t *testing.T) {
 			if tt.shouldPanic {
 				defer expectPanic(t, nil)
 			}
-			if got := p.attempt_parse_named_call(tt.isNegated); !reflect.DeepEqual(got, tt.want) {
+			if got := p.attempt_parse_named_call(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Parser.attempt_parse_named_call() = %v, want %v", got, tt.want)
 			}
 		})

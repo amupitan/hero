@@ -11,6 +11,7 @@ type Binary struct {
 	Right    core.Expression
 	Operator lexer.Token
 	Negated  bool
+	Signed  bool
 }
 
 func (b *Binary) String() string {
